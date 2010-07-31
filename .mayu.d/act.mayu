@@ -1,0 +1,169 @@
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# IMEがonの時の変換とか
+# 
+
+keymap2 act_nomal:global
+ key IL-*IC-*Semicolon =a n n
+ key IL-*IC-q = o n n
+ key IL-*IC-j = e n n
+ key IL-*IC-k = u n n
+ key IL-*IC-x = i n n
+ key IL-*IC-S-*_7 = a i
+ key IL-*IC-comma = o u
+ key IL-*IC-Period = e i
+ key IL-*IC-p = u u
+ key IL-*IC-y = u i
+ 
+keymap2 b:act_nomal
+ key IL-*IC-v = y &Prefix(act_nomal)
+ key IL-*IC-w = y u u &Prefix(act_nomal)
+ key IL-*IC-z = y o u &Prefix(act_nomal)
+ 
+keymap2 c:act_nomal
+ key IL-*IC-g = y &Prefix(act_nomal)
+ 
+ key IL-*IC-c = y u u
+ key IL-*IC-l = y o u
+ 
+keymap2 d:act_nomal
+ key IL-*IC-n = y &Prefix(act_nomal)
+ key IL-*IC-b = h &Prefix(act_nomal)
+ 
+keymap2 f:act_nomal
+ key IL-*IC-comma = o Minus
+ 
+ key IL-*IC-c = y u Minus
+ key IL-*IC-l = o Minus
+ 
+keymap2 g:act_nomal
+ key IL-*IC-r = y &Prefix(act_nomal)
+ 
+ key IL-*IC-c = y u u
+ key IL-*IC-l = y o u
+ 
+keymap2 h:act_nomal
+ key IL-*IC-n = y &Prefix(act_nomal)
+ 
+ key IL-*IC-t = y u u
+ key IL-*IC-s = y o u
+ 
+keymap2 j:act_nomal
+keymap2 k:act_nomal
+keymap2 l:act_nomal
+keymap2 m:act_nomal
+ key IL-*IC-v = y &Prefix(act_nomal)
+ key IL-*IC-w = y u Hyphen &Prefix(act_nomal)
+ key IL-*IC-z = y o u &Prefix(act_nomal)
+ 
+keymap2 n:act_nomal
+ key IL-*IC-h = y &Prefix(act_nomal)
+ 
+ key IL-*IC-t = y u u
+ key IL-*IC-s = y o u
+ 
+keymap2 p:act_nomal
+ key IL-*IC-n = y &Prefix(act_nomal)
+ key IL-*IC-g = u u &Prefix(act_nomal)
+ key IL-*IC-s = a &Prefix(act_nomal)
+ key IL-*IC-n = o &Prefix(act_nomal)
+ key IL-*IC-t = e &Prefix(act_nomal)
+ key IL-*IC-h = u &Prefix(act_nomal)
+ key IL-*IC-d = i &Prefix(act_nomal)
+ 
+ key IL-*IC-m = u n n &Prefix(act_nomal)
+ key IL-*IC-v = o n n &Prefix(act_nomal)
+ key IL-*IC-z = a n n &Prefix(act_nomal)
+ 
+ key IL-*IC-c = y u u &Prefix(act_nomal)
+ key IL-*IC-l = y o u &Prefix(act_nomal)
+ 
+keymap2 q:act_nomal
+keymap2 r:act_nomal
+ key IL-*IC-g = y &Prefix(act_nomal)
+ 
+ key IL-*IC-c = y u u
+ key IL-*IC-l = y o u
+ 
+keymap2 s:act_nomal
+ key IL-*IC-h = y &Prefix(act_nomal)
+ key IL-*IC-t = y u u
+ key IL-*IC-s = y o u
+ 
+keymap2 t:act_nomal
+ key IL-*IC-h = y &Prefix(act_nomal)
+ key IL-*IC-w = h &Prefix(act_nomal)
+ 
+ key IL-*IC-t = y u u
+ key IL-*IC-s = y o u
+ 
+keymap2 v:act_nomal
+ key IL-*IC-comma = o Minus
+ 
+keymap2 w:act_nomal
+ key IL-*IC-comma = o Minus
+ 
+keymap2 y:act_nomal
+ key IL-*IC-g = u u &Prefix(act_nomal)
+ key IL-*IC-c = e i &Prefix(act_nomal)
+ key IL-*IC-r = o u &Prefix(act_nomal)
+ key IL-*IC-l = a i &Prefix(act_nomal)
+ 
+ key IL-*IC-h = u &Prefix(act_nomal)
+ key IL-*IC-m = u n n &Prefix(act_nomal)
+ key IL-*IC-v = o n n &Prefix(act_nomal)
+ key IL-*IC-z = a n n &Prefix(act_nomal)
+
+keymap2 x:act_nomal
+ key IL-*IC-a = a
+ key IL-*IC-i = i
+ key IL-*IC-u = u
+ key IL-*IC-e = e
+ key IL-*IC-o = o
+ key IL-*IC-y = y &Prefix(y)
+ 
+ 
+keymap2 z:act_nomal
+ key IL-*IC-m = y &Prefix(act_nomal)
+ key IL-*IC-w = y u u &Prefix(act_nomal)
+ key IL-*IC-z = y o u &Prefix(act_nomal)
+
+keymap Global
+ key IL-*IC-S-*_7 = x t u
+ key IL-*IC-b = b &Prefix(b)		#以降ACT配列用
+ key IL-*IC-c = c &Prefix(c)		#
+ key IL-*IC-d = d &Prefix(d)		#
+ key IL-*IC-f = f &Prefix(f)		#
+ key IL-*IC-g = g &Prefix(g)		#
+ key IL-*IC-h = h &Prefix(h)		#
+ key IL-*IC-j = j &Prefix(j)		#
+ key IL-*IC-k = k &Prefix(k)		#
+ key IL-*IC-l = l &Prefix(l)		#
+ key IL-*IC-m = m &Prefix(m)		#
+ key IL-*IC-n = n &Prefix(n)		#
+ key IL-*IC-p = p &Prefix(p)		#
+ key IL-*IC-r = r &Prefix(r)		#
+ key IL-*IC-s = s &Prefix(s)		#
+ key IL-*IC-t = t &Prefix(t)		#
+ key IL-*IC-v = v &Prefix(v)		#
+ key IL-*IC-w = w &Prefix(w)		#
+ key IL-*IC-x = x &Prefix(x)		#
+ key IL-*IC-y = y &Prefix(y)		#
+ key IL-*IC-z = z &Prefix(z)		#
+ 
+ key IL-*IC-*Semicolon = a n n		#
+ key IL-*IC-q = o n n				#
+ key IL-*IC-j = e n n				#
+ key IL-*IC-k = u n n				#
+ key IL-*IC-x = i n n				#
+ 
+ 
+ #        w 	z
+ #w 		    ウォー
+ #v 	ヴゅー 	ヴぉー
+#window skk /SKKIME1\.0UCompStr/ : Global
+# key IL-*IC-*Semicolon		= a n n #SKK-IME対策
+# key IL-*IC-q		= o n n #SKK-IME対策
+#window skk /SKKIME1\.0UUI/ : Global
+# key IL-*IC-*Semicolon		= a n n #SKK-IME対策
+# key IL-*IC-q		= o n n #SKK-IME対策
+ 

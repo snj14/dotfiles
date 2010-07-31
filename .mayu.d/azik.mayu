@@ -1,0 +1,279 @@
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# IMEÇ™onÇÃéûÇÃïœä∑Ç∆Ç©
+#
+
+keymap2 yy:global
+key IL-*IC-z =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-q =a i
+key IL-*IC-h =u u
+key IL-*IC-w =e i
+key IL-*IC-p =o u
+
+keymap2 b:global
+key IL-*IC-z =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-g =y &Sync &Prefix(yy)
+key IL-*IC-q =a i
+key IL-*IC-h =u u
+key IL-*IC-w =e i
+key IL-*IC-p =o u
+
+keymap2 c:global
+key IL-*IC-a =h a
+key IL-*IC-i =h i
+key IL-*IC-u =h u
+key IL-*IC-e =h e
+key IL-*IC-o =h o
+key IL-*IC-f =h e
+key IL-*IC-z =h a n n
+key IL-*IC-k =h i n n
+key IL-*IC-j =h u n n
+key IL-*IC-d =h e n n
+key IL-*IC-l =h o n n
+key IL-*IC-q =h a i
+key IL-*IC-h =h u u
+key IL-*IC-w =h e i
+key IL-*IC-p =h o u
+
+keymap2 d:global
+key IL-*IC-n =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-f =e
+key IL-*IC-q =a i
+key IL-*IC-h =u u
+key IL-*IC-w =e i
+key IL-*IC-p =o u
+
+keymap2 f:global
+key IL-*IC-n =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-p =o Minus
+
+keymap2 g:global
+key IL-*IC-n =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-q =a i
+key IL-*IC-h =u u
+key IL-*IC-w =e i
+key IL-*IC-p =o u
+
+keymap2 h:global
+key IL-*IC-z =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-f =u
+key IL-*IC-g =y &Sync &Prefix(yy)
+key IL-*IC-q =a i
+key IL-*IC-h =u u
+key IL-*IC-w =e i
+key IL-*IC-p =o u
+
+keymap2 j:global
+key IL-*IC-z =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-f =u
+key IL-*IC-q =a i
+key IL-*IC-h =u u
+key IL-*IC-w =e i
+key IL-*IC-p =o u
+
+keymap2 k:global
+key IL-*IC-z =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-f =i
+key IL-*IC-g =y &Sync &Prefix(yy)
+key IL-*IC-q =a i
+key IL-*IC-h =u u
+key IL-*IC-w =e i
+key IL-*IC-p =o u
+
+keymap2 l:global
+key IL-*IC-z =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+
+keymap2 m:global
+key IL-*IC-z =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-f =u
+key IL-*IC-g =y &Sync &Prefix(yy)
+key IL-*IC-q =a i
+key IL-*IC-h =u u
+key IL-*IC-w =e i
+key IL-*IC-p =o u
+
+keymap2 n:global
+key IL-*IC-z =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-f =u
+key IL-*IC-g =y &Sync &Prefix(yy)
+key IL-*IC-q =a i
+key IL-*IC-h =u u
+key IL-*IC-w =e i
+key IL-*IC-p =o u
+
+keymap2 p:global
+key IL-*IC-z =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-g =y &Sync &Prefix(yy)
+key IL-*IC-q =a i
+key IL-*IC-h =u u
+key IL-*IC-w =e i
+key IL-*IC-p =o u
+
+keymap2 r:global
+key IL-*IC-n =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-q =a i
+key IL-*IC-h =u u
+key IL-*IC-w =e i
+key IL-*IC-p =o u
+
+keymap2 s:global
+key IL-*IC-n =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-g =y &Sync &Prefix(yy)
+key IL-*IC-q =a i
+key IL-*IC-h =u u
+key IL-*IC-w =e i
+key IL-*IC-p =o u
+
+keymap2 t:global
+key IL-*IC-n =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-q =a i
+key IL-*IC-h =u u
+key IL-*IC-w =e i
+key IL-*IC-p =o u
+
+keymap2 v:global
+key IL-*IC-n =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+
+keymap2 w:global
+key IL-*IC-n =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-q =a i
+key IL-*IC-p =o Minus
+
+keymap2 x:global
+key IL-*IC-IL-*IC-n =s h a n n
+key IL-*IC-IL-*IC-k =s h i n n
+key IL-*IC-IL-*IC-j =s h u n n
+key IL-*IC-IL-*IC-d =s h e n n
+key IL-*IC-IL-*IC-l =s h o n n
+key IL-*IC-IL-*IC-a =s h a
+key IL-*IC-IL-*IC-u =s h u
+key IL-*IC-IL-*IC-e =s h e
+key IL-*IC-IL-*IC-o =s h o
+key IL-*IC-IL-*IC-q =s h a i
+key IL-*IC-IL-*IC-h =s h u u
+key IL-*IC-IL-*IC-p =s h o u
+
+keymap2 y:global
+key IL-*IC-z =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-f =u
+key IL-*IC-q =a i
+key IL-*IC-h =u u
+key IL-*IC-p =o u
+
+keymap2 z:global
+key IL-*IC-n =a n n
+key IL-*IC-k =i n n
+key IL-*IC-j =u n n
+key IL-*IC-d =e n n
+key IL-*IC-l =o n n
+key IL-*IC-q =a i
+key IL-*IC-h =u u
+key IL-*IC-w =e i
+key IL-*IC-p =o u
+
+
+keymap Global
+key IL-*IC-Colon = Minus				#ÅFÇÅ[Ç…Ç∑ÇÈ
+key IL-*IC-S-Colon = S-Minus			# Å™ShiftâüÇµÇƒÇÈéûÇ…Ç‡
+key IL-*IC-C-Colon = C-Colon			#   AltÇ®ÇµÇƒÇÈÇ∆Ç´
+key IL-*IC-Minus = Colon				#îΩëŒÅB
+key IL-*IC-S-Minus = S-Colon			# Å™ShiftâüÇµÇƒÇÈéûÇ…Ç‡
+key IL-*IC-Semicolon = l t u			#ÅGÇÅuÇ¡ÅvÇ…Ç∑ÇÈ
+key IL-*IC-b = b &Sync &Prefix(b)		#à»ç~AZIKîzóÒóp
+key IL-*IC-c = c &Sync &Prefix(c)		#
+key IL-*IC-d = d &Sync &Prefix(d)		#
+key IL-*IC-f = f &Sync &Prefix(f)		#
+key IL-*IC-g = g &Sync &Prefix(g)		#
+key IL-*IC-h = h &Sync &Prefix(h)		#
+key IL-*IC-j = j &Sync &Prefix(j)		#
+key IL-*IC-k = k &Sync &Prefix(k)		#
+key IL-*IC-l = l &Sync &Prefix(l)		#
+key IL-*IC-m = m &Sync &Prefix(m)		#
+key IL-*IC-n = n &Sync &Prefix(n)		#
+key IL-*IC-p = p &Sync &Prefix(p)		#
+key IL-*IC-r = r &Sync &Prefix(r)		#
+key IL-*IC-s = s &Sync &Prefix(s)		#
+key IL-*IC-t = t &Sync &Prefix(t)		#
+key IL-*IC-v = v &Sync &Prefix(v)		#
+key IL-*IC-w = w &Sync &Prefix(w)		#
+key IL-*IC-x = &Sync &Prefix(x)			#
+key IL-*IC-y = y &Sync &Prefix(y)		#
+key IL-*IC-z = z &Sync &Prefix(z)		#
+key IL-*IC-q = n n						#
+
+
+
+#Ç€ÇÒ 	ÇoÇe
+
+

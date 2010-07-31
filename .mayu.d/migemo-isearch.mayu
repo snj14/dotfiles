@@ -1,0 +1,43 @@
+#
+# migemo-isearch.mayu
+#
+# $Id: migemo-isearch.mayu,v 1.6 2005/03/21 11:09:16 hos Exp $
+#
+
+keyseq $IEMigemoISearchForward = &PlugIn("migemo-isearch", "ie_isearch_fmRi", "", true)
+keyseq $IEMigemoISearchForwardCaseSensitive = &PlugIn("migemo-isearch", "ie_isearch_fmR", "", true)
+keyseq $IEMigemoISearchBackward = &PlugIn("migemo-isearch", "ie_isearch_bmRi", "", true)
+keyseq $IEMigemoISearchBackwardCaseSensitive = &PlugIn("migemo-isearch", "ie_isearch_bmR", "", true)
+
+keyseq $IERegexpISearchForward = &PlugIn("migemo-isearch", "ie_isearch_fri", "", true)
+keyseq $IERegexpISearchForwardCaseSensitive = &PlugIn("migemo-isearch", "ie_isearch_fr", "", true)
+keyseq $IERegexpISearchBackward = &PlugIn("migemo-isearch", "ie_isearch_bri", "", true)
+keyseq $IERegexpISearchBackwardCaseSensitive = &PlugIn("migemo-isearch", "ie_isearch_br", "", true)
+
+keyseq $IEISearchForward = &PlugIn("migemo-isearch", "ie_isearch_fi", "", true)
+keyseq $IEISearchForwardCaseSensitive = &PlugIn("migemo-isearch", "ie_isearch_f", "", true)
+keyseq $IEISearchBackward = &PlugIn("migemo-isearch", "ie_isearch_bi", "", true)
+keyseq $IEISearchBackwardCaseSensitive = &PlugIn("migemo-isearch", "ie_isearch_b", "", true)
+
+keyseq $MigemoISearchNextForward = &PostMessage(ToParentWindow, 0x8001, 0, 0)
+keyseq $MigemoISearchNextBackward = &PostMessage(ToParentWindow, 0x8002, 0, 0)
+keyseq $MigemoISearchClose = &PostMessage(ToParentWindow, 0x8003, 0, 0)
+keyseq $MigemoISearchSelectAction = &PostMessage(ToParentWindow, 0x8004, 0, 0)
+
+keymap2 InternetExplorerC-C : InternetExplorer
+ event prefixed		= &HelpMessage("InternetExplorer C-c-", "C-c C-s\tRegexp I-search forwrd\nC-c C-r\tRegexp I-search backward")
+ event before-key-down	= &HelpMessage
+ key C-S		= $IERegexpISearchForward
+ key C-R		= $IERegexpISearchBackward
+
+keymap InternetExplorer
+ key C-S		= $IEMigemoISearchForward
+ key C-R		= $IEMigemoISearchBackward
+ key C-C		= &Prefix(InternetExplorerC-C)
+
+window MigemoSearch /:migemo-isearch:Edit$/ : EditControl
+ key ESC		= $MigemoISearchClose
+ key C-G		= $MigemoISearchClose
+ key C-S		= $MigemoISearchNextForward
+ key C-R		= $MigemoISearchNextBackward
+ key Enter		= $MigemoISearchSelectAction
