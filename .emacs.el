@@ -1,0 +1,1120 @@
+;; last updated : 2010-07-31
+
+;; auto-install
+;; http://www.emacswiki.org/emacs/download/auto-install.el
+
+;; emacs-version predicates
+(dolist (ver '("22" "23" "23.0" "23.1" "23.2"))
+  (set (intern (concat "emacs" ver "-p"))
+       (if (string-match (concat "^" ver) emacs-version)
+           t nil)))
+
+;; my require
+(defmacro require-with-url (feature filename noerror url)
+  "require with message"
+  `(progn
+     (or (locate-library (or ,filename (format "%s" ,feature)))
+         (message (format "(auto-install-from-url %S)" ,url)))
+     (require ,feature ,filename ,noerror)))
+
+(defmacro require-with-batch (feature filename noerror batchname)
+  "require with message"
+  `(progn
+     (or (locate-library (or ,filename (format "%s" ,feature)))
+         (message (format "(auto-install-batch %S)" ,batchname)))
+     (require ,feature ,filename ,noerror)))
+
+;; system-type predicates
+(setq darwin-p  (eq system-type 'darwin)
+      ns-p      (eq window-system 'ns)
+      carbon-p  (featurep 'carbon-emacs-package)
+      linux-p   (eq system-type 'gnu/linux)
+      cygwin-p  (eq system-type 'cygwin)
+      nt-p      (eq system-type 'windows-nt)
+      meadow-p  (featurep 'meadow)
+      windows-p (or cygwin-p nt-p meadow-p))
+;; verification
+;; (mapcar (lambda (x) (if (boundp x) (symbol-value x) 'none))
+;;   '(emacs22-p emacs23-p emacs23.0-p emacs23.1-p emacs23.2-p emacs23.3-p))
+
+(defun autoload-if-found (function file &optional docstring interactive type)
+  "set autoload iff. FILE has found."
+  (and (locate-library file)
+       (autoload function file docstring interactive type)))
+
+;; private ?
+(setq emacs-private-p darwin-p)
+
+;; load-path
+(add-to-list 'load-path "~/.emacs.d/")
+
+;;; auto-install.el
+(when (require 'auto-install nil t)
+  ;; (setq url-proxy-services '(("http" . "PROXY:8080")))
+  (add-to-list 'load-path "~/.emacs.d/auto-install"))
+
+;;; change default key bindings
+(global-set-key (kbd "C-x k") 'kill-this-buffer)
+(global-set-key (kbd "C-h")   'backward-delete-char-untabify); h => delete backward
+(global-set-key (kbd "M-h")   'backward-kill-word)
+(global-set-key (kbd "M-C-h") 'backward-kill-sexp)
+(global-set-key (kbd "M-C-d") 'kill-sexp); d => delete forward
+(global-set-key (kbd "C-m")   'indent-new-comment-line)
+; (global-set-key (kbd "M-a")   'back-to-indentation); a => goto beginning of line
+(global-set-key (kbd "C-c q") 'comment-region)
+(global-unset-key (kbd "M-ESC"))
+(global-set-key (kbd "M-ESC") 'eval-expression); xyzzy like
+; font size
+(global-set-key (kbd "C-+") (lambda () (interactive) (text-scale-increase 1)))
+(global-set-key (kbd "C--") (lambda () (interactive) (text-scale-decrease 1)))
+(global-set-key (kbd "C-0") (lambda () (interactive) (text-scale-increase 0)))
+;; C-v
+(defadvice scroll-up (around wzlike-scroll-up activate)
+  (condition-case err
+      ad-do-it
+    (end-of-buffer
+     (goto-char (point-max)))))
+;; M-v
+(defadvice scroll-down (around wzlike-scroll-down activate)
+  (condition-case err
+      ad-do-it
+    (beginning-of-buffer
+     (goto-char (point-min)))))
+
+;; windmove.el
+;; shift + <cursor>
+(windmove-default-keybindings)
+(setq windmove-wrap-around t)
+
+;; 色の設定
+(when linux-p
+  (set-frame-parameter nil 'alpha 80)
+  (set-background-color "black")
+  (set-foreground-color "snow1")
+  (set-cursor-color "DarkOrange")
+  )
+
+;; フォントの設定
+(when window-system
+
+  (cond
+   ;; X / emacs22
+   ((and (eq window-system 'x)
+	 (= emacs-major-version 22))
+    (dolist (fspec '("-*-fixed-medium-r-normal--12-*-*-*-*-*-fontset-12"
+		     "-*-fixed-medium-r-normal--14-*-*-*-*-*-fontset-14"
+		     "-*-fixed-medium-r-normal--16-*-*-*-*-*-fontset-16"
+		     "-*-fixed-medium-r-normal--18-*-*-*-*-*-fontset-18"))
+      (if (not (assoc fspec fontset-alias-alist))
+          (create-fontset-from-fontset-spec fspec)))
+    (add-to-list 'default-frame-alist '(font . "fontset-14") t))
+
+   ;; Emacs 23 以上
+   ((>= emacs-major-version 23)
+    (let (my-font-height my-font my-font-ja)
+      (cond
+       ;; for X (debian/ubuntu/fedora)
+       ((eq window-system 'x)
+	;;(setq my-font-height 90)
+	;; (setq my-font-height 105)
+	;; (setq my-font-height 120)
+	(setq my-font-height 150)
+	;;(setq my-font "Monospace")
+	;;(setq my-font "Inconsolata")
+	(setq my-font "Takaoゴシック")
+	;;(setq my-font-ja "VL ゴシック")
+	;;(setq my-font-ja "Takaoゴシック")
+	(setq my-font-ja "IPAゴシック")
+
+	(setq face-font-rescale-alist
+	      '(("-cdac$" . 1.3)))
+
+	;; VMware 上のX11では、800x600 のとき 96 dpi になるように調節されている。
+	;; なので、別のサイズやフルスクリーンにすると、dpi の値が変化する。
+	;; 結果、Emacs Xft では同じ pt に対するpixel値が大きくなってしまう。
+	;; 対処不明。。。
+	)
+
+       ;; Cocoa Emacs
+       ((eq window-system 'ns)
+	(setq mac-allow-anti-aliasing t)
+	(setq my-font-height 120)
+	;;(setq my-font "Courier")
+	;;(setq my-font "Courier New")
+	;;(setq my-font "Osaka-Mono")
+	;;(setq my-font "Monaco")       ;; XCode 3.1 で使っているフォント
+	(setq my-font "Menlo")        ;; XCode 3.2 で使ってるフォント
+	(setq my-font-ja "Hiragino Kaku Gothic Pro")
+	;;(setq my-font-ja "Hiragino Maru Gothic Pro")
+	;;(setq my-font-ja "IPAゴシック")
+
+	;; フォントサイズの微調節 (12ptで合うように)
+	(setq face-font-rescale-alist
+	      '(("^-apple-hiragino.*" . 1.2)
+		(".*osaka-bold.*" . 1.2)
+		(".*osaka-medium.*" . 1.2)
+		(".*courier-bold-.*-mac-roman" . 1.0)
+		(".*monaco cy-bold-.*-mac-cyrillic" . 0.9)
+		(".*monaco-bold-.*-mac-roman" . 0.9)
+		("-cdac$" . 1.3)))
+	)
+
+       ;; NTEmacs
+       ((eq window-system 'w32)
+	(setq scalable-fonts-allowed t)
+	(setq w32-enable-synthesized-fonts t)
+	(setq my-font-height 100)
+	;;(setq my-font "ＭＳ ゴシック")
+	;;(setq my-font "VL ゴシック")
+	;;(setq my-font "IPAゴシック")
+	;;(setq my-font "Takaoゴシック")
+	;;(setq my-font "Inconsolata")
+	(setq my-font "Consolas")
+	;;(setq my-font "DejaVu Sans Mono")
+	;;(setq my-font-ja "ＭＳ ゴシック")
+	;;(setq my-font-ja "VL ゴシック")
+	(setq my-font-ja "IPAゴシック")
+	;;(setq my-font-ja "Takaoゴシック")
+	;;(setq my-font-ja "メイリオ")
+	;; ime-font の設定がわからん
+
+	;; フォントサイズの微調節 (10ptで合うように)
+	(setq face-font-rescale-alist
+	      '((".*ＭＳ.*bold.*iso8859.*"  . 0.9)
+		(".*ＭＳ.*bold.*jisx02.*" . 0.95)
+		(".*DejaVu Sans.*" . 0.9)
+		(".*メイリオ.*" . 1.1)
+		("-cdac$" . 1.3)))
+
+	;;(dolist (e face-font-rescale-alist)
+	;;  (setcar e (encode-coding-string (car e) 'emacs-mule)))
+	)
+
+       )
+
+      ;; デフォルトフォント設定
+      (when my-font
+	(set-face-attribute 'default nil :family my-font :height my-font-height)
+	;;(set-frame-font (format "%s-%d" my-font (/ my-font-height 10)))
+	)
+
+      ;; 日本語文字に別のフォントを指定
+      (when my-font-ja
+	  (let ((fn (frame-parameter nil 'font))
+		(rg "iso10646-1"))
+	    (set-fontset-font fn 'katakana-jisx0201 `(,my-font-ja . ,rg))
+	    (set-fontset-font fn 'japanese-jisx0208 `(,my-font-ja . ,rg))
+	    (set-fontset-font fn 'japanese-jisx0212 `(,my-font-ja . ,rg)))
+	)
+      ))
+   ))
+;; mac
+(when darwin-p
+  (add-to-list 'exec-path "/opt/local/bin")
+  ;; setting of emacsclient when use screen
+  (when (= 2 (length (split-string (shell-command-to-string "pgrep emacs") "\n")))
+    (add-hook 'after-init-hook 'server-start)
+    (add-hook 'server-done-hook
+              (lambda ()
+                (shell-command
+                 "screen -r -X select `cat ~/tmp/emacsclient-caller`"))))
+  (when (or carbon-p
+            ns-p)
+    (set-frame-parameter nil 'alpha 85);; 透明度
+    (load "256color-hack.el")
+    (require 'color-theme)
+    (color-theme-initialize)
+    (my-color-theme))
+  (when carbon-p
+    (require 'carbon-font)
+    (fixed-width-set-fontset "hiramaru" 16)
+    (setq mac-option-modifier 'meta)
+    (mac-toggle-max-window))
+  (when ns-p
+    (prefer-coding-system 'utf-8-unix)
+    (create-fontset-from-fontset-spec
+     "-*-*-medium-r-normal--14-*-*-*-*-*-fontset-hiramaru14" nil t)
+    (create-fontset-from-fontset-spec
+     "-*-*-medium-r-normal--16-*-*-*-*-*-fontset-hiramaru16" nil t)
+    (create-fontset-from-fontset-spec
+     "-*-*-medium-r-normal--20-*-*-*-*-*-fontset-hiramaru20" nil t)
+    (mapc
+     #'(lambda (fontset)
+         (set-fontset-font fontset 'japanese-jisx0208
+                           '("Hiragino Maru Gothic Pro" . "iso10646-1"))
+         (set-fontset-font fontset 'katakana-jisx0201
+                           '("Hiragino Maru Gothic Pro" . "iso10646-1"))
+         (set-fontset-font fontset 'japanese-jisx0212
+                           '("Hiragino Maru Gothic Pro" . "iso10646-1"))
+         ) (list "fontset-hiramaru20" "fontset-hiramaru16" "fontset-hiramaru14"))
+    (let (
+          ;; (my-fontset "fontset-hiramaru14") ;; ちっちゃいフォント
+          (my-fontset "fontset-hiramaru20")  ;; でっかいフォント
+          )
+      (set-default-font my-fontset)
+      (add-to-list 'default-frame-alist `(font . ,my-fontset)))
+    )
+)
+(when nt-p
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 日本語環境の設定
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (set-language-environment "Japanese")
+  (set-keyboard-coding-system 'japanese-shift-jis)
+
+  ;; UTF-8⇔Legacy Encoding (EUC-JP や Shift_JIS など)をWindowsで変換
+  ;;http://nijino.homelinux.net/emacs/emacs23-ja.html
+  ;; encode-translation-table の設定
+  (coding-system-put 'euc-jp :encode-translation-table
+                     (get 'japanese-ucs-cp932-to-jis-map 'translation-table))
+  (coding-system-put 'iso-2022-jp :encode-translation-table
+                     (get 'japanese-ucs-cp932-to-jis-map 'translation-table))
+  (coding-system-put 'cp932 :encode-translation-table
+                     (get 'japanese-ucs-jis-to-cp932-map 'translation-table))
+  ;; charset と coding-system の優先度設定
+  (set-charset-priority 'ascii 'japanese-jisx0208 'latin-jisx0201
+                        'katakana-jisx0201 'iso-8859-1 'cp1252 'unicode)
+  (set-coding-system-priority 'utf-8 'euc-jp 'iso-2022-jp 'cp932)
+  ;; font
+  (set-default-font "Osaka－等幅")
+  ;; status bar
+  (w32-ime-initialize)
+  ;; current directory
+  (cd "~")
+
+  ;;ime の ON/OFF でカーソルの色を変える
+  (set-cursor-color "snow1")
+  (add-hook 'input-method-activate-hook
+            (function (lambda () (set-cursor-color "green"))))
+  (add-hook 'input-method-inactivate-hook
+            (function (lambda () (set-cursor-color "snow1"))))
+  ;; タブ, 全角スペースを表示する
+  (defface my-face-b-1 '((t (:background "gray15"))) nil)
+  (defface my-face-b-2 '((t (:background "gray26"))) nil)
+  (defface my-face-u-1 '((t (:foreground "SteelBlue" :underline t))) nil)
+  (defvar my-face-b-1 'my-face-b-1)
+  (defvar my-face-b-2 'my-face-b-2)
+  (defvar my-face-u-1 'my-face-u-1)
+  (defadvice font-lock-mode (before my-font-lock-mode ())
+    (font-lock-add-keywords
+     major-mode
+     '(("\t" 0 my-face-b-2 append)
+       ("　" 0 my-face-b-1 append)
+       ("[ \t]+$" 0 my-face-u-1 append)
+       )))
+  (ad-enable-advice 'font-lock-mode 'before 'my-font-lock-mode)
+  (ad-activate 'font-lock-mode)
+  )
+
+;;; other options
+(setq inhibit-startup-message t)
+(menu-bar-mode -1)     ; hide menu bar
+(tool-bar-mode -1)     ; hide tool bar
+(line-number-mode 1)   ; show line number   @ mode-line
+(column-number-mode 1) ; show column number @ mode-line
+(show-paren-mode t)    ;
+(setq ring-bell-function 'ignore) ; DO NOT BEEP!!!
+(blink-cursor-mode nil); cursor, do not blink
+(fset 'yes-or-no-p 'y-or-n-p) ; yes/no -> y/n
+(setq delete-auto-save-files t)
+(setq kill-whole-line t)  ; kill line
+(setq kill-read-only-ok t); kill line
+(put 'narrow-to-region 'disabled nil) ; enable narrowing
+(setq resize-minibuffer-mode 1)
+(setq require-final-newline t)
+(setq transient-mark-mode t); enable visual feedback on selections
+(setq frame-title-format (concat  "%b - emacs@" system-name)); default to better frame titles
+(setq-default indent-tabs-mode nil) ; use space for indent
+;(add-hook 'before-save-hook 'delete-trailing-whitespace); auto delete trail whitespace
+(when (boundp 'show-trailing-whitespace);; emphasize trailing whitespace
+ (setq-default show-trailing-whitespace t))
+(setq-default truncate-lines t);;テキストを折り返さない
+(setq truncate-partial-width-windows t)
+(setq-default indicate-empty-lines t)      ;; emphasize EOF (for GUI)
+(setq-default indicate-buffer-boundaries t);; emphasize EOF (for GUI)
+(set-face-foreground 'fringe "IndianRed")  ;; fringe
+(set-face-background 'fringe "gray10")     ;; fringe
+
+;;; backup-directory
+(setq make-backup-files t)
+(setq backup-directory-alist
+      (cons (cons "\\.*$" (expand-file-name "~/backup"))
+            backup-directory-alist))
+
+;;; migemo.el
+(when darwin-p
+    (setq migemo-command "/usr/local/bin/cmigemo")
+    (setq migemo-options '("-q" "--emacs"))
+    (setq migemo-dictionary "/usr/local/share/migemo/euc-jp/migemo-dict")
+    (setq migemo-user-dictionary nil)
+    (setq migemo-regex-dictionary nil)
+    (setq migemo-use-pattern-alist nil)
+    (setq migemo-use-frequent-pattern-alist nil)
+    (setq migemo-pattern-alist-length 1024)
+    (load-library "migemo")
+    (migemo-init))
+
+;;; ------------------------------------------------------------------
+;;; Anything
+;;; ------------------------------------------------------------------
+
+;;; anything.el
+(when (require-with-batch 'anything nil t "anything")
+  (setq anything-idle-delay 0.3)
+  (setq anything-input-idle-delay 0)
+  (setq anything-selection-face 'anything-isearch-match)
+
+  (define-key anything-map (kbd "M-n") 'anything-next-source)
+  (define-key anything-map (kbd "M-p") 'anything-previous-source)
+
+;;; anything-config.el
+  (require 'anything-config nil t)
+
+;;; anything-match-plugin.el
+  (require 'anything-match-plugin nil t)
+
+  (require 'anything-show-completion nil t)
+
+;;; descbinds-anything.el
+  (when (require 'descbinds-anything)
+    (descbinds-anything-install))
+
+  ;; ちら見用
+  (define-key anything-map (kbd "C-o") 'anything-execute-persistent-action)
+
+  (global-set-key (kbd "M-y") '(lambda ()
+                                 (interactive)
+                                 (anything 'anything-c-source-kill-ring)))
+
+  (global-set-key (kbd "C-x b") 'anything)
+  (global-set-key (kbd "C-;") 'anything)
+  (setq anything-sources
+        (list anything-c-source-buffers+
+              anything-c-source-ffap-guesser
+              anything-c-source-files-in-current-dir
+              anything-c-source-file-name-history
+              anything-c-source-locate
+              anything-c-source-info-pages
+              anything-c-source-man-pages
+              anything-c-source-emacs-commands))
+
+  ;; M-x
+  (defvar anything-c-source-mx
+    '((name . "M-x")
+      (init . (lambda ()
+                (with-current-buffer (anything-candidate-buffer 'local)
+                  (loop for sym being the symbols
+                        when (commandp sym)
+                        do (insert (symbol-name sym) "\n")))))
+      (type . command)
+      (candidates-in-buffer))
+    "Expand extended command with anything.el")
+  (global-set-key (kbd "M-x")
+                  (lambda () (interactive)
+                    (anything '(anything-c-source-extended-command-history
+                                anything-c-source-mx))))
+
+  ;; jump anywhere
+  (defvar anything-c-source-my-register-set
+    '((name . "Set Register")
+      (dummy)
+      (action . point-to-register)))
+  (defun anything-jump-anywhere ()
+    (interactive)
+    (anything (list anything-c-source-bookmarks
+                    anything-c-source-register
+                    anything-c-source-ctags
+                    anything-c-source-bookmark-set
+                    anything-c-source-my-register-set
+                    )))
+  (global-set-key (kbd "C-\\") 'anything-jump-anywhere)
+  (global-set-key (kbd "C-=") 'anything-jump-anywhere)
+
+  )
+
+;;; jump-dls.el
+(when (require-with-url 'jump "jump-dls" t "http://www.emacswiki.org/emacs/download/jump-dls.el")
+  (global-set-key (kbd "<f4>") 'jump-symbol-at-point)
+  (global-set-key (kbd "S-<f4>") 'jump-back))
+
+;;; popup.el
+;;; auto-complete.el
+(when (and (require-with-url 'popup nil t "http://github.com/m2ym/auto-complete/raw/master/popup.el")
+           (require-with-url 'auto-complete nil t "http://github.com/m2ym/auto-complete/raw/master/auto-complete.el"))
+  (setq ac-auto-start 3)
+  (global-auto-complete-mode t)
+  (define-key ac-complete-mode-map (kbd "C-m") 'ac-complete)
+  (define-key ac-complete-mode-map (kbd "C-n") 'ac-next)
+  (define-key ac-complete-mode-map (kbd "C-p") 'ac-previous))
+
+;;; ac-anything.el (anything + auto-complete)
+;; (require 'ac-anything)
+;; (define-key ac-complete-mode-map (kbd "C-;") 'ac-complete-with-anything)
+
+;;; ------------------------------------------------------------------
+;;; dired
+;;; ------------------------------------------------------------------
+
+;; emphasize file that modified today
+(defface my-face-f-2 '((t (:foreground "GreenYellow"))) nil)
+(defvar my-face-f-2 'my-face-f-2)
+(defun my-dired-today-search (arg)
+  "Fontlock search function for dired."
+  (search-forward-regexp
+   (concat (format-time-string "%b %e" (current-time)) " [0-9]....") arg t))
+(add-hook 'dired-mode-hook
+          '(lambda ()
+             (font-lock-add-keywords
+              major-mode
+              (list
+               '(my-dired-today-search . my-face-f-2)))))
+
+;; auto incremental search (dired)
+(defvar my-ex-isearch-next      (kbd "C-r"))
+(defvar my-ex-isearch-prev      (kbd "C-e"))
+(defvar my-ex-isearch-backspace (kbd "C-h"))
+(defvar my-ex-isearch-return    (kbd "C-g"))
+(defun my-ex-isearch (REGEX1 REGEX2 FUNC1 FUNC2 RPT)
+  (interactive)
+  (let ((input last-command-char)
+        (inhibit-quit t)
+        (oldpoint (point)) regx str)
+    (save-match-data
+      (catch 'END
+        (while t
+          (funcall FUNC1)
+          (cond
+           ;; character
+           ((and (integerp input) (>= input ?!)(<= input ?~)
+                 (not (and (>= input ?A)(<= input ?Z))))
+            (setq str (concat str (char-to-string input)))
+            (setq regx (concat REGEX1 str REGEX2))
+            (re-search-forward regx nil t nil))
+           ;; backspace
+           ((and (integerp input)
+                 (or (eq 'backspace input)
+                     (= input (string-to-char my-ex-isearch-backspace))))
+            (setq str (if (eq 0 (length str)) str (substring str 0 -1)))
+            (setq regx (concat REGEX1 str REGEX2))
+            (goto-char oldpoint)
+            (re-search-forward regx nil t nil))
+           ;; next
+           ((and (integerp input) (= input (string-to-char my-ex-isearch-next)))
+            (re-search-forward regx nil t RPT))
+           ;; previous
+           ((and (integerp input) (= input (string-to-char my-ex-isearch-prev)))
+            (re-search-backward regx nil t nil))
+           ;; return
+           ((and (integerp input) (= input (string-to-char my-ex-isearch-return)))
+            (goto-char oldpoint)
+            (message "return")
+            (throw 'END nil))
+           ;; other command
+           (t
+            (setq unread-command-events (append (list input) unread-command-events))
+            (throw 'END nil)))
+          (funcall FUNC2)
+;          (highlinehighlight-current-line)
+          (message str)
+          (setq input (read-event)))))))
+(defun my-dired-isearch()
+  (interactive)
+  (my-ex-isearch "[0-9] " "[^ \n]+$" (lambda()(backward-char 3)) 'dired-move-to-filename 2))
+(defun my-dired-isearch-define-key (str)
+  (let ((i 0))
+    (while (< i (length str))
+      (define-key dired-mode-map (substring str i (1+ i)) 'my-dired-isearch)
+      (setq i (1+ i)))))
+(add-hook 'dired-mode-hook
+          '(lambda ()
+             (my-dired-isearch-define-key "abcdefghijklmnopqrstuvwxyz0123456789_.-+~#")
+             ))
+(require 'dired)
+(define-key dired-mode-map "Q" 'quit-window)
+
+
+;;; ------------------------------------------------------------------
+;;; Major Mode
+;;; ------------------------------------------------------------------
+
+
+;;; markdown-mode.el
+(autoload 'markdown-mode "markdown-mode.el"
+  "Major mode for editing Markdown files" t)
+(setq auto-mode-alist
+      (cons '("\\.markdown" . markdown-mode) auto-mode-alist))
+
+
+;;; lisp-mode.el
+(add-hook 'emacs-lisp-mode-hook  ;; include lisp-interaction-mode-hook
+          '(lambda ()
+             (define-key emacs-lisp-mode-map (kbd "C-j") 'eval-print-last-sexp)
+             (when (featurep 'auto-complete)
+               (make-local-variable 'ac-sources)
+               (setq ac-sources (append ac-sources '(ac-source-symbols ac-source-filename))))
+             ))
+;; eldoc-extension.el
+(require-with-url 'eldoc-extension nil t "http://www.emacswiki.org/cgi-bin/wiki/download/eldoc-extension.el")
+(setq eldoc-idle-delay 0.5)
+(setq eldoc-echo-area-use-multiline-p t)
+(add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+
+
+;; js2.el
+(autoload 'js2-mode "js2" nil t)
+(add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
+(setq js2-cleanup-whitespace nil
+      js2-mirror-mode nil ; don't auto complete close paren
+      ;;                    js2-bounce-indent-flag nil
+      tab-width 4          ; tab
+      js2-basic-offset 4   ; indent
+      js2-strict-missing-semi-warning nil ; missing ; is not warning
+      js2-mode-show-strict-warnings nil
+;;      js2-auto-indent-flag nil    ; dont indent by { } ( ) [ ] : ; , *
+      js2-rebind-eol-bol-keys nil ; dont rebind C-a C-e
+      js2-highlight-level 3
+      )
+(add-hook 'js2-mode-hook
+          '(lambda ()
+             (define-key js2-mode-map (kbd "M-C-h") nil)
+             ))
+
+
+;; ruby-mode.el
+(autoload 'ruby-mode "ruby-mode"
+  "Mode for editing ruby source files" t)
+(setq auto-mode-alist
+      (append '(("\\.rb$" . ruby-mode)) auto-mode-alist))
+(setq interpreter-mode-alist (append '(("ruby" . ruby-mode))
+                                     interpreter-mode-alist))
+(autoload 'run-ruby "inf-ruby"
+  "Run an inferior Ruby process")
+(autoload 'inf-ruby-keys "inf-ruby"
+  "Set local key defs for inf-ruby in ruby-mode")
+(add-hook 'ruby-mode-hook
+          '(lambda ()
+            (inf-ruby-keys)))
+
+;;; php-mode.el
+;;; http://sourceforge.net/projects/php-mode/
+(when (require 'php-mode nil t)
+  (add-hook 'php-mode-user-hook
+            '(lambda ()
+               (setq tab-width 4)
+               (setq indent-tabs-mode t)
+               (setq c-basic-offset 4))))
+
+;;; ------------------------------------------------------------------
+;;; applications
+;;; ------------------------------------------------------------------
+
+;;; Dictionary.app + popup.el
+(when (and darwin-p (featurep 'popup))
+  (defvar dict-bin "~/bin/dict"
+    "dict 実行ファイルのパス")
+
+  (defun temp-cancel-read-only (function &optional jaspace-off)
+    "eval temporarily cancel buffer-read-only
+&optional t is turn of jaspace-mode"
+    (let ((read-only-p nil)
+          (jaspace-mode-p nil))
+      (when jaspace-off
+        (when jaspace-mode
+          (jaspace-mode)
+          (setq jaspace-mode-p t)))
+      (when buffer-read-only
+        (toggle-read-only)
+        (setq read-only-p t))
+      (eval function)
+      (when read-only-p
+        (toggle-read-only))
+      (when jaspace-mode-p
+        (jaspace-mode))))
+
+  (defun ns-popup-dictionary ()
+    "マウスカーソルの単語を Mac の辞書でひく"
+    (interactive)
+    (let ((word (substring-no-properties (thing-at-point 'word)))
+          (old-buf (current-buffer))
+          (dict-buf (get-buffer-create "*dictionary.app*"))
+          (dict))
+      (when (and mark-active transient-mark-mode)
+        (setq word (buffer-substring-no-properties (region-beginning) (region-end))))
+      (set-buffer dict-buf)
+      (erase-buffer)
+      (call-process dict-bin
+                    nil "*dictionary.app*" t word
+                    "Japanese-English" "Japanese" "Japanese Synonyms")
+      (setq dict (buffer-string))
+      (set-buffer old-buf)
+      (when (not (eq (length dict) 0))
+        (temp-cancel-read-only '(popup-tip dict :margin t :scroll-bar t) t))))
+
+  (defvar dict-timer nil)
+  (defvar dict-delay 1.0)
+  (defun dict-timer ()
+    (when (and (not (minibufferp))
+               (and mark-active transient-mark-mode))
+      (ns-popup-dictionary)))
+  (setq dict-timer (run-with-idle-timer dict-delay dict-delay 'dict-timer))
+
+  (define-key global-map (kbd "C-c e") 'ns-popup-dictionary))
+
+;;; navi2ch
+(when emacs-private-p
+  (add-to-list 'load-path "~/.emacs.d/navi2ch")
+  (autoload 'navi2ch "navi2ch" "Navigator for 2ch for Emacs" t))
+
+;;; tails-history.el
+;;; http://www.bookshelf.jp/elc/tails-history.el
+(when (locate-library "tails-history")
+  (load-library "tails-history"))
+
+;;; ------------------------------------------------------------------
+;;; Edit
+;;; ------------------------------------------------------------------
+
+;;; rect-mark.el
+(when (require 'rect-mark nil t)
+  (define-key ctl-x-map "r\C-@" 'rm-set-mark)
+  (define-key ctl-x-map [?r ?\C-\ ] 'rm-set-mark)
+  (define-key ctl-x-map "r\C-x" 'rm-exchange-point-and-mark)
+  (define-key ctl-x-map "r\C-w" 'rm-kill-region)
+  (define-key ctl-x-map "r\M-w" 'rm-kill-ring-save)
+  (define-key global-map [S-down-mouse-1] 'rm-mouse-drag-region)
+  (defun set-normal-or-rectangel-mark-command ()
+    (interactive)
+    (cond ((not mark-active)
+           (call-interactively 'set-mark-command))
+          ((not rm-mark-active)
+           (rm-activate-mark)
+           (message "Rectangle mark set"))
+          (t
+           (rm-deactivate-mark)
+           (set-mark-command nil))))
+  (global-set-key (kbd "C-SPC") 'set-normal-or-rectangel-mark-command))
+
+;;; mic-paren.el
+(when (require 'mic-paren nil t)
+  (paren-activate)
+  (setq paren-sexp-mode t))
+
+;;; linum
+(when nt-p
+  (global-linum-mode))
+
+;;; jaspace.el
+(when (require 'jaspace nil t)
+  (setq jaspace-highlight-tabs t))
+
+;;; redo.el
+(when (require-with-url 'redo nil t "http://www.wonderworks.com/download/redo.el")
+  (global-set-key (kbd "M-/") 'redo))
+
+;;; hl-line.el
+;;; hl-line+.el
+(when (require-with-url 'hl-line+ nil t "http://www.emacswiki.org/emacs/download/hl-line+.el")
+  (hl-line-mode))
+
+;;; dmacro.el
+;;; (auto-install-from-url "http://pitecan.com/papers/JSSSTDmacro/dmacro.el")
+(when (autoload-if-found 'dmacro-exec "dmacro" nil t)
+  (global-set-key (kbd "C-t") 'dmacro-exec))
+
+;;; thing-opt.el
+(when (require-with-url 'thing-opt nil t "http://www.emacswiki.org/emacs/download/thing-opt.el")
+  (global-set-key (kbd "M-s") 'upward-mark-thing)
+  (setq upward-mark-thing-list
+        '(;; special thing
+          email
+          url
+          string
+          ;; general thing
+          symbol
+          word
+          ;; up-list
+          (up-list . *)
+          )))
+
+;;; active-region.el
+;;; (auto-install-from-url )
+(when (and (require-with-url 'active-region nil t "http://github.com/snj14/active-region/raw/master/active-region.el")
+           (featurep 'anything))
+  (defun active-region-anything (&optional arg)
+    (interactive "*P")
+    (cond ((consp arg) ;; C-u C-i
+           (anything '(((name       . "Formatting")
+                        (candidates . (indent-region
+                                       align
+                                       fill-region))
+                        (action     . call-interactively))
+                       ((name       . "Editing")
+                        (candidates . (string-rectangle
+                                       delete-rectangle
+                                       iedit-mode
+                                       ))
+                        (action     . call-interactively))
+                       ((name       . "Converting")
+                        (candidates . (upcase-region
+                                       downcase-region
+                                       capitalize-region
+                                       base64-decode-region
+                                       base64-encode-region
+                                       tabify
+                                       untabify))
+                        (action     . call-interactively))
+                       ((name       . "Converting (japanese)")
+                        (candidates . (japanese-hankaku-region
+                                       japanese-hiragana-region
+                                       japanese-katakana-region
+                                       japanese-zenkaku-region))
+                        (action     . call-interactively))
+                       )))
+          ((active-region-multiple-line-p)
+           (call-interactively 'indent-region)
+           (message "indent region."))
+          ))
+  (define-key active-region-mode-map (kbd "C-i") 'active-region-anything)
+  (define-key active-region-mode-map (kbd "M-r") 'active-region-replace)
+  ;; window
+  (defun other-window-or-split ()
+    (interactive)
+    (when (one-window-p)
+      (split-window-horizontally))
+    (other-window 1))
+  (global-set-key (kbd "C-w") 'other-window-or-split)
+  (global-set-key (kbd "M-w") 'delete-other-windows)
+  )
+
+;;; smartchr.el
+(when (require-with-url 'smartchr nil t  "http://github.com/imakado/emacs-smartchr/raw/master/smartchr.el")
+  (global-set-key (kbd "=")  (smartchr '("=" " = " " == " " === ")))
+  (global-set-key (kbd "'")  (smartchr '("'" "'`!!''" "``!!''")))
+  (global-set-key (kbd "\"") (smartchr '("\"" "\"`!!'\"")))
+  (global-set-key (kbd "{")  (smartchr '("{" "{ `!!' }" "{ \"`!!'\" }")))
+  (global-set-key (kbd "(")  (smartchr '("(" "(`!!')")))
+
+  (define-key emacs-lisp-mode-map (kbd ";") (smartchr '("; " ";; " ";;; ")))
+  (define-key lisp-interaction-mode-map (kbd ";") (smartchr '("; " ";; " ";;; "))))
+
+;;; undo-tree
+;;; orig http://www.dr-qubit.org/download.php?file=undo-tree/undo-tree.el
+;;; mod  http://gist.github.com/raw/301447/a9d4a2202e695f950076fbec6fd6fc9407774b6a/undo-tree.el
+(when (require-with-url 'undo-tree nil t "http://gist.github.com/raw/301447/a9d4a2202e695f950076fbec6fd6fc9407774b6a/undo-tree.el")
+  (global-undo-tree-mode))
+
+;;; flush lines in occur buffer
+(define-key occur-mode-map "F"
+  (lambda (str) (interactive "sflush: ")
+    (let ((buffer-read-only))
+      (save-excursion
+        (beginning-of-buffer)
+        (forward-line 1)
+        (beginning-of-line)
+        (flush-lines str)))))
+;;; keep lines in occur buffer
+(define-key occur-mode-map "K"
+  (lambda (str) (interactive "skeep: ")
+    (let ((buffer-read-only))
+      (save-excursion
+        (beginning-of-buffer)
+        (forward-line 1)
+        (beginning-of-line)
+        (keep-lines str)))))
+
+;;; highlight yanked region
+(when (or window-system (>= emacs-major-version 21))
+  (defadvice yank (after ys:highlight-string activate)
+    (let ((ol (make-overlay (mark t) (point))))
+      (overlay-put ol 'face 'highlight)
+      (sit-for 0.5)
+      (delete-overlay ol)))
+  (defadvice yank-pop (after ys:highlight-string activate)
+    (when (eq last-command 'yank)
+      (let ((ol (make-overlay (mark t) (point))))
+        (overlay-put ol 'face 'highlight)
+        (sit-for 0.5)
+        (delete-overlay ol)))))
+
+;;; yasnippet.el
+(when (require 'yasnippet nil t)
+  (yas/initialize)
+  (yas/load-directory "~/.emacs.d/snippets")
+  (define-key yas/keymap (kbd "C-n") 'yas/next-field)
+  (define-key yas/keymap (kbd "C-p") 'yas/prev-field)
+
+  ;;; anything-c-yasnippet.el
+  ;;; http://svn.coderepos.org/share/lang/elisp/anything-c-yasnippet/anything-c-yasnippet.el
+  (require 'anything-c-yasnippet)
+  (setq anything-c-yas-space-match-any-greedy t)
+  (global-set-key (kbd "M-i") 'anything-c-yas-complete)
+  ; (add-to-list 'yas/extra-mode-hooks 'ruby-mode-hook)
+  (setq ac-sources
+        '(ac-source-yasnippet ac-source-words-in-buffer))
+  ;; yasnippet for js2-mode
+  ; (add-to-list 'yas/extra-mode-hooks
+  ;              'js2-mode-hook)
+  )
+
+;;; time-stamp.el
+(require 'time-stamp)
+(add-hook 'before-save-hook 'time-stamp)
+(setq time-stamp-active t)
+(setq time-stamp-start "last updated : ")
+(setq time-stamp-format "%04y-%02m-%02d")
+(setq time-stamp-end " \\|$")
+
+;;; ------------------------------------------------------------------
+;;; File
+;;; ------------------------------------------------------------------
+
+;;; egg.el -- Emacs Got Git
+;;; C-x v d : status
+;;; C-x v l : log
+(when (require-with-url 'egg nil t "http://github.com/bogolisk/egg/raw/master/egg.el")
+  (defun git-log-file ()
+    (interactive)
+    (shell-command (format "git log %s" buffer-file-name) "*git-log*"))
+  (define-key egg-file-cmd-map "l" 'git-log-file))
+
+;;; uniqufy.el
+(require 'uniquify)
+(setq uniquify-buffer-name-style 'post-forward-angle-brackets)
+
+;;; session.el
+(when (require 'session nil t)
+  (setq session-save-file (expand-file-name "~/.emacs.d/.session"))
+  (add-hook 'after-init-hook 'session-initialize))
+
+;;; save *scratch*
+(defun save-scratch-data ()
+  (let ((str (progn
+               (set-buffer (get-buffer "*scratch*"))
+               (buffer-substring-no-properties
+                (point-min) (point-max))))
+        (file "~/.emacs.d/.scratch"))
+    (if (get-file-buffer (expand-file-name file))
+        (setq buf (get-file-buffer (expand-file-name file)))
+      (setq buf (find-file-noselect file)))
+    (set-buffer buf)
+    (erase-buffer)
+    (insert str)
+    (save-buffer)))
+(defadvice save-buffers-kill-emacs
+  (before save-scratch-buffer activate)
+  (save-scratch-data))
+(defun read-scratch-data ()
+  (let ((file "~/.emacs.d/.scratch"))
+    (when (file-exists-p file)
+      (set-buffer (get-buffer "*scratch*"))
+      (erase-buffer)
+      (insert-file-contents file))))
+(read-scratch-data)
+
+
+
+;; reqpen-recent-closed-file
+(defvar recent-closed-files nil)
+(defun collect-recent-closed-files ()
+  (when buffer-file-name
+    (push buffer-file-name recent-closed-files)))
+(add-hook 'kill-buffer-hook 'collect-recent-closed-files)
+(defun reopen-recent-closed-file ()
+  (interactive)
+  (when recent-closed-files
+    (let (path)
+      (while (not (setq path (pop recent-closed-files))))
+      (find-file path))))
+(global-set-key (kbd "C-c C-t u") 'reopen-recent-closed-file)
+
+;;; auto chmod +x
+(when (or darwin-p
+          linux-p)
+  (add-hook 'after-save-hook
+            'executable-make-buffer-file-executable-if-script-p))
+
+;;; delete empty file
+(defun delete-empty-file ()
+  (when (and (buffer-file-name (current-buffer))
+             (= (point-min) (point-max))
+             (y-or-n-p "Delete file and kill buffer?"))
+    (delete-file
+     (buffer-file-name (current-buffer)))
+    (kill-buffer (current-buffer))))
+(add-hook 'after-save-hook 'delete-empty-file)
+
+;;; ------------------------------------------------------------------
+;;; minibuffer
+;;; ------------------------------------------------------------------
+
+;;; minibuf-isearch.el
+(setq minibuf-isearch-fire-keys '("\C-p"))
+(require-with-url 'minibuf-isearch nil t "http://www.sodan.org/~knagano/emacs/minibuf-isearch/minibuf-isearch.el")
+
+;;; cycle-mini.el
+(require-with-url 'cycle-mini nil t "http://joereiss.net/misc/cycle-mini.el")
+
+;;; delete duplicated minibuffer history
+(require 'cl)
+(defun minibuffer-delete-duplicate ()
+  (set minibuffer-history-variable
+       (delete-duplicates (symbol-value minibuffer-history-variable) :test 'equal)))
+(add-hook 'minibuffer-setup-hook 'minibuffer-delete-duplicate)
+
+
+;; use TAB for complete
+(define-key read-expression-map (kbd "TAB") 'lisp-complete-symbol)
+
+;;; minibuffer c-g momorize
+(defadvice abort-recursive-edit (before minibuffer-save activate)
+  (when (eq (selected-window) (active-minibuffer-window))
+    (add-to-history minibuffer-history-variable (minibuffer-contents))))
+
+
+;;; ------------------------------------------------------------------
+;;; search
+;;; ------------------------------------------------------------------
+
+;;; color-moccur.el
+(when (require-with-url 'color-moccur nil t "http://www.bookshelf.jp/elc/color-moccur.el")
+  (setq moccur-split-word t))
+;; (when (require 'migemo nil t)
+;;   (setq moccur-use-migemo t))
+
+;;; anything-c-moccur.el
+(require-with-url 'anything-c-moccur nil t "http://svn.coderepos.org/share/lang/elisp/anything-c-moccur/trunk/anything-c-moccur.el")
+(global-set-key (kbd "M-o") 'anything-c-moccur-occur-by-moccur)
+(global-set-key (kbd "C-M-o") 'anything-c-moccur-dmoccur)
+(global-set-key (kbd "C-M-s") 'anything-c-moccur-isearch-forward)
+(global-set-key (kbd "C-M-r") 'anything-c-moccur-isearch-backward)
+(setq anything-c-moccur-anything-idle-delay 0
+      anything-c-moccur-higligt-info-line-flag t
+      anything-c-moccur-enable-auto-look-flag t
+      anything-c-moccur-enable-initial-pattern t)
+(setq anything-c-source-occur-by-moccur
+  `((name . "Occur by Moccur")
+    (candidates . anything-c-moccur-occur-by-moccur-get-candidates)
+    (action . (("Goto line" . anything-c-moccur-occur-by-moccur-goto-line)))
+    (persistent-action . anything-c-moccur-occur-by-moccur-persistent-action)
+    (init . anything-c-moccur-initialize)
+    (cleanup . anything-c-moccur-clean-up)
+    (match . (identity))
+    (requires-pattern . 1)
+    (delayed)
+    (volatile)))
+
+;; isearch-occur
+(defun isearch-occur ()
+  "Invoke `occur' from within isearch."
+  (interactive)
+  (let ((case-fold-search isearch-case-fold-search))
+    (occur
+     (if isearch-regexp
+         isearch-string (regexp-quote isearch-string)))))
+(define-key isearch-mode-map (kbd "C-o") 'isearch-occur)
+
+;;; refe.el
+;; (require 'refe nil t)
+
+;; ;;; psvn.el
+;; (require 'psvn)
+
+;;; isearch.el
+(setq isearch-lazy-highlight-initial-delay 0)
+
+;;; ------------------------------------------------------------------
+;;; test
+;;; ------------------------------------------------------------------
+
+;;; e2wm
+(require-with-batch 'e2wm nil t "e2wm")
+(global-set-key (kbd "M-+") 'e2wm:start-management)
+
+;;; zencoding-mode.el --- Unfold CSS-selector-like expressions to markup
+(require-with-url 'zencoding-mode nil t "http://github.com/chrisdone/zencoding/raw/master/zencoding-mode.el")
+(add-hook 'sgml-mode-hook 'zencoding-mode) ;; Auto-start on any markup modes
+(add-hook 'html-mode-hook 'zencoding-mode)
+
+;;; http://download.savannah.gnu.org/releases-noredirect/espresso/espresso.el
+(autoload 'espresso-mode "espresso" nil t)
+
+(defun my-js2-indent-function ()
+  (interactive)
+  (save-restriction
+    (widen)
+    (let* ((inhibit-point-motion-hooks t)
+           (parse-status (save-excursion (syntax-ppss (point-at-bol))))
+           (offset (- (current-column) (current-indentation)))
+           (indentation (espresso--proper-indentation parse-status))
+           node)
+
+      (save-excursion
+
+        ;; I like to indent case and labels to half of the tab width
+        (back-to-indentation)
+        (if (looking-at "case\\s-")
+            (setq indentation (+ indentation (/ espresso-indent-level 2))))
+
+        ;; consecutive declarations in a var statement are nice if
+        ;; properly aligned, i.e:
+        ;;
+        ;; var foo = "bar",
+        ;;     bar = "foo";
+        (setq node (js2-node-at-point))
+        (when (and node
+                   (= js2-NAME (js2-node-type node))
+                   (= js2-VAR (js2-node-type (js2-node-parent node))))
+          (setq indentation (+ 4 indentation))))
+
+      (indent-line-to indentation)
+      (when (> offset 0) (forward-char offset)))))
+
+(defun my-indent-sexp ()
+  (interactive)
+  (save-restriction
+    (save-excursion
+      (widen)
+      (let* ((inhibit-point-motion-hooks t)
+             (parse-status (syntax-ppss (point)))
+             (beg (nth 1 parse-status))
+             (end-marker (make-marker))
+             (end (progn (goto-char beg) (forward-list) (point)))
+             (ovl (make-overlay beg end)))
+        (set-marker end-marker end)
+        (overlay-put ovl 'face 'highlight)
+        (goto-char beg)
+        (while (< (point) (marker-position end-marker))
+          ;; don't reindent blank lines so we don't set the "buffer
+          ;; modified" property for nothing
+          (beginning-of-line)
+          (unless (looking-at "\\s-*$")
+            (indent-according-to-mode))
+          (forward-line))
+        (run-with-timer 0.5 nil '(lambda(ovl)
+                                   (delete-overlay ovl)) ovl)))))
+
+(defun my-js2-mode-hook ()
+  (require 'espresso)
+  (setq espresso-indent-level 4
+        indent-tabs-mode nil
+        c-basic-offset 4)
+  (c-toggle-auto-state 0)
+  (c-toggle-hungry-state 1)
+  (set (make-local-variable 'indent-line-function) 'my-js2-indent-function)
+  ; (define-key js2-mode-map [(meta control |)] 'cperl-lineup)
+  (define-key js2-mode-map "\C-\M-\\"
+    '(lambda()
+       (interactive)
+       (insert "/* -----[ ")
+       (save-excursion
+         (insert " ]----- */"))
+       ))
+  (define-key js2-mode-map "\C-m" 'newline-and-indent)
+  ; (define-key js2-mode-map [(backspace)] 'c-electric-backspace)
+  ; (define-key js2-mode-map [(control d)] 'c-electric-delete-forward)
+  (define-key js2-mode-map "\C-\M-q" 'my-indent-sexp)
+  (if (featurep 'js2-highlight-vars)
+      (js2-highlight-vars-mode))
+  (message "My JS2 hook"))
+
+(add-hook 'js2-mode-hook 'my-js2-mode-hook)

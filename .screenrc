@@ -1,0 +1,100 @@
+# -*- Mode: Shell-script -*-
+
+# -----------------------------------------------------------
+# Environment
+# -----------------------------------------------------------
+shell zsh
+
+# -----------------------------------------------------------
+# Options
+# -----------------------------------------------------------
+defscrollback 10240
+vbell off
+autodetach on
+defkanji UTF-8
+defflow off
+msgwait 3
+msgminwait 0
+startup_message off
+defhstatus [^En:^Et]
+
+# encoding
+termcapinfo * KJ=UTF-8
+defencoding UTF-8
+
+# -----------------------------------------------------------
+# Multiuser
+# -----------------------------------------------------------
+aclumask ?+r-wx
+acladd foo,bar # other users ...
+aclchg *+x detach,select,next,prev,split,only,other
+
+# -----------------------------------------------------------
+# Key bindings
+# -----------------------------------------------------------
+escape ^Tt
+
+bind . source $HOME/.screenrc
+bind ^l lockscreen
+bind ^g
+bind e copy
+bind ^b windowlist -b
+bind / eval "scrollback 0" "scrollback 10240"
+
+# encoding
+bind E eval "encoding euc" "!!!echo 'export LANG=ja_JP.EUC-JP'"
+bind U eval "encoding utf-8" "!!!echo 'export LANG=ja_JP.UTF-8'"
+bind S eval "encoding sjis" "!!!echo 'export LANG=ja_JP.Shift-JIS'"
+
+# for multiuser mode
+bind m exec $HOME/dotfilese/.screen.d/toggle_multiuser.sh
+bind r eval 'echo "read only"' 'aclchg * -w "#?"' 'aclchg $LOGNAME +w "#?"'
+bind w eval 'echo "writable"'  'aclchg * +w "#?"'
+
+# 3 stroke keybindings ( C-t C-x letter )
+bind ^x eval 'echo "1:only / 2:split / 0:remove / o:focus r:resize"' 'command -c REGION'
+bind -c REGION 2 split
+bind -c REGION 1 only
+bind -c REGION 0 remove
+bind -c REGION o focus
+bind -c REGION r resize
+
+# kill window without ask
+bind k eval 'colon "kill^m"' 'echo ""'
+bind K eval 'colon "kill^m"' 'echo ""'
+
+# bind N exec $HOME/dotfiles/.screen.d/caption.sh
+
+# emacs like
+markkeys ^f=^v:^f=f:^b=b:h=^b:l=^f:$=^e
+bind ^y  eval 'paste .'
+bind ^k  exec $HOME/dotfiles/.screen.d/copy_line.sh
+bind ' ' eval "copy" "stuff ' '"
+
+# rdic
+bind ^W eval "exec '$HOME/dotfiles/.screen.d/bin/lookup.sh'"
+
+defbce "on"
+term xterm-256color
+
+# -----------------------------------------------------------
+# Startup
+# -----------------------------------------------------------
+# screen -t emacs emacs -nw
+# screen -t mfiler mfiler2
+# screen -t rdic rdic -x ./dict/pdic98/eijiro098.euc
+# screen -t ls
+
+# -----------------------------------------------------------
+# Captions
+# -----------------------------------------------------------
+
+# backtick 0 0 60 # for test
+# backtick 1 0 60 cat $HOME/tmp/gmailunread.txt       # GMAIL
+# backtick 2 0 60 cat $HOME/tmp/fastladder_unread.txt # RSS
+backtick 3 0 0 $HOME/dotfiles/.screen.d/host.sh
+
+# hardstatus alwayslastline "%{dd}[HOST:%{.G}%3`%{dd}][GMAIL:%{.G}%1`%{dd}][RSS:%{.G}%2`%{dd}] %= %{dd}%{.B}%y/%m/%d(%D) %{.M}%c"
+hardstatus alwayslastline "%{dd}[@%{.G}%3`%{dd}] %= %{dd}%{.B}%y/%m/%d%{.M}%c"
+
+caption always "%?%F%{= wk}%:%{= Kw} %n %t%? %?%F%:%{KK}%?%-w%?%F%{=b dB}%?%>%n %t%100<%?%F%{-}%:%{KK}%?%+w"
