@@ -1,28 +1,38 @@
-;; last updated : 2010-07-31
+;; last updated : 2010-08-01
 
-;; auto-install
-;; http://www.emacswiki.org/emacs/download/auto-install.el
+;;; ------------------------------------------------------------------
+;;; function
+;;; ------------------------------------------------------------------
+(eval-when-compile (require 'cl))
 
-;; emacs-version predicates
 (dolist (ver '("22" "23" "23.0" "23.1" "23.2"))
   (set (intern (concat "emacs" ver "-p"))
        (if (string-match (concat "^" ver) emacs-version)
            t nil)))
 
-;; my require
-(defmacro require-with-url (feature filename noerror url)
-  "require with message"
-  `(progn
-     (or (locate-library (or ,filename (format "%s" ,feature)))
-         (message (format "(auto-install-from-url %S)" ,url)))
-     (require ,feature ,filename ,noerror)))
+(defmacro req (lib src &rest body)
+  `(cond ((locate-library ,(symbol-name lib))
+          (require ',lib nil t)
+          ,@body)
+         ((not ,src)
+          (message (format "library not found : %S" (symbol-name ',lib))))
+         ((string-match "^http" ,src)
+          (message (format "(auto-install-from-url %S)" ,src)))
+         (t
+          (message (format "(auto-install-batch %S)" ,src)))))
 
-(defmacro require-with-batch (feature filename noerror batchname)
-  "require with message"
-  `(progn
-     (or (locate-library (or ,filename (format "%s" ,feature)))
-         (message (format "(auto-install-batch %S)" ,batchname)))
-     (require ,feature ,filename ,noerror)))
+(defmacro lazyload (func lib src &rest body)
+  `(cond ((locate-library ,lib)
+          ,@(mapcar (lambda (f) `(autoload ',f ,lib nil t)) func)
+          (eval-after-load ,lib
+            '(progn
+               ,@body)))
+         ((not ,src)
+          (message (format "library not found : %S" (symbol-name ',lib))))
+         ((string-match "^http" ,src)
+          (message (format "(auto-install-from-url %S)" ,src)))
+         (t
+          (message (format "(auto-install-batch %S)" ,src)))))
 
 ;; system-type predicates
 (setq darwin-p  (eq system-type 'darwin)
@@ -37,21 +47,29 @@
 ;; (mapcar (lambda (x) (if (boundp x) (symbol-value x) 'none))
 ;;   '(emacs22-p emacs23-p emacs23.0-p emacs23.1-p emacs23.2-p emacs23.3-p))
 
-(defun autoload-if-found (function file &optional docstring interactive type)
-  "set autoload iff. FILE has found."
-  (and (locate-library file)
-       (autoload function file docstring interactive type)))
+;;; ------------------------------------------------------------------
+;;; env
+;;; ------------------------------------------------------------------
 
 ;; private ?
 (setq emacs-private-p darwin-p)
 
 ;; load-path
 (add-to-list 'load-path "~/.emacs.d/")
+(add-to-list 'load-path "~/.emacs.d/auto-install")
 
 ;;; auto-install.el
-(when (require 'auto-install nil t)
+(lazyload (auto-install-from-url
+           auto-install-from-emacswiki
+           auto-install-from-dired
+           auto-install-from-directory
+           auto-install-from-buffer
+           auto-install-from-gist
+           auto-install-batch)
+  "auto-install" "http://www.emacswiki.org/emacs/download/auto-install.el"
   ;; (setq url-proxy-services '(("http" . "PROXY:8080")))
-  (add-to-list 'load-path "~/.emacs.d/auto-install"))
+  )
+
 
 ;;; change default key bindings
 (global-set-key (kbd "C-x k") 'kill-this-buffer)
@@ -64,6 +82,7 @@
 (global-set-key (kbd "C-c q") 'comment-region)
 (global-unset-key (kbd "M-ESC"))
 (global-set-key (kbd "M-ESC") 'eval-expression); xyzzy like
+(global-set-key (kbd "M-g") 'goto-line) ; goto-lineをM-gに
 ; font size
 (global-set-key (kbd "C-+") (lambda () (interactive) (text-scale-increase 1)))
 (global-set-key (kbd "C--") (lambda () (interactive) (text-scale-decrease 1)))
@@ -81,10 +100,17 @@
     (beginning-of-buffer
      (goto-char (point-min)))))
 
-;; windmove.el
-;; shift + <cursor>
-(windmove-default-keybindings)
-(setq windmove-wrap-around t)
+;; fullscreen
+(defun toggle-fullscreen ()
+  (interactive)
+  (if (frame-parameter nil 'fullscreen)
+      (set-frame-parameter nil 'fullscreen nil)
+    (set-frame-parameter nil 'fullscreen 'fullboth)))
+(global-set-key (kbd "C-c m") 'toggle-fullscreen)
+
+;;; ------------------------------------------------------------------
+;;; Color
+;;; ------------------------------------------------------------------
 
 ;; 色の設定
 (when linux-p
@@ -92,9 +118,13 @@
   (set-background-color "black")
   (set-foreground-color "snow1")
   (set-cursor-color "DarkOrange")
-  )
+  (when window-system
+    (add-hook 'after-init-hook 'server-start)
+    (setq x-select-enable-clipboard t)))
 
-;; フォントの設定
+;;; ------------------------------------------------------------------
+;;; Font
+;;; ------------------------------------------------------------------
 (when window-system
 
   (cond
@@ -225,11 +255,6 @@
     (require 'color-theme)
     (color-theme-initialize)
     (my-color-theme))
-  (when carbon-p
-    (require 'carbon-font)
-    (fixed-width-set-fontset "hiramaru" 16)
-    (setq mac-option-modifier 'meta)
-    (mac-toggle-max-window))
   (when ns-p
     (prefer-coding-system 'utf-8-unix)
     (create-fontset-from-fontset-spec
@@ -256,9 +281,7 @@
     )
 )
 (when nt-p
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; 日本語環境の設定
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; 日本語環境の設定
   (set-language-environment "Japanese")
   (set-keyboard-coding-system 'japanese-shift-jis)
 
@@ -335,31 +358,12 @@
 (set-face-foreground 'fringe "IndianRed")  ;; fringe
 (set-face-background 'fringe "gray10")     ;; fringe
 
-;;; backup-directory
-(setq make-backup-files t)
-(setq backup-directory-alist
-      (cons (cons "\\.*$" (expand-file-name "~/backup"))
-            backup-directory-alist))
-
-;;; migemo.el
-(when darwin-p
-    (setq migemo-command "/usr/local/bin/cmigemo")
-    (setq migemo-options '("-q" "--emacs"))
-    (setq migemo-dictionary "/usr/local/share/migemo/euc-jp/migemo-dict")
-    (setq migemo-user-dictionary nil)
-    (setq migemo-regex-dictionary nil)
-    (setq migemo-use-pattern-alist nil)
-    (setq migemo-use-frequent-pattern-alist nil)
-    (setq migemo-pattern-alist-length 1024)
-    (load-library "migemo")
-    (migemo-init))
-
 ;;; ------------------------------------------------------------------
 ;;; Anything
 ;;; ------------------------------------------------------------------
 
-;;; anything.el
-(when (require-with-batch 'anything nil t "anything")
+;; anything.el
+(req anything "anything"
   (setq anything-idle-delay 0.3)
   (setq anything-input-idle-delay 0)
   (setq anything-selection-face 'anything-isearch-match)
@@ -367,16 +371,16 @@
   (define-key anything-map (kbd "M-n") 'anything-next-source)
   (define-key anything-map (kbd "M-p") 'anything-previous-source)
 
-;;; anything-config.el
+  ;; anything-config.el
   (require 'anything-config nil t)
 
-;;; anything-match-plugin.el
+  ;; anything-match-plugin.el
   (require 'anything-match-plugin nil t)
 
   (require 'anything-show-completion nil t)
 
-;;; descbinds-anything.el
-  (when (require 'descbinds-anything)
+  ;; descbinds-anything.el
+  (when (require 'descbinds-anything nil t)
     (descbinds-anything-install))
 
   ;; ちら見用
@@ -430,29 +434,10 @@
   (global-set-key (kbd "C-\\") 'anything-jump-anywhere)
   (global-set-key (kbd "C-=") 'anything-jump-anywhere)
 
-  )
-
-;;; jump-dls.el
-(when (require-with-url 'jump "jump-dls" t "http://www.emacswiki.org/emacs/download/jump-dls.el")
-  (global-set-key (kbd "<f4>") 'jump-symbol-at-point)
-  (global-set-key (kbd "S-<f4>") 'jump-back))
-
-;;; popup.el
-;;; auto-complete.el
-(when (and (require-with-url 'popup nil t "http://github.com/m2ym/auto-complete/raw/master/popup.el")
-           (require-with-url 'auto-complete nil t "http://github.com/m2ym/auto-complete/raw/master/auto-complete.el"))
-  (setq ac-auto-start 3)
-  (global-auto-complete-mode t)
-  (define-key ac-complete-mode-map (kbd "C-m") 'ac-complete)
-  (define-key ac-complete-mode-map (kbd "C-n") 'ac-next)
-  (define-key ac-complete-mode-map (kbd "C-p") 'ac-previous))
-
-;;; ac-anything.el (anything + auto-complete)
-;; (require 'ac-anything)
-;; (define-key ac-complete-mode-map (kbd "C-;") 'ac-complete-with-anything)
+)
 
 ;;; ------------------------------------------------------------------
-;;; dired
+;;; Dired
 ;;; ------------------------------------------------------------------
 
 ;; emphasize file that modified today
@@ -532,18 +517,15 @@
 (require 'dired)
 (define-key dired-mode-map "Q" 'quit-window)
 
-
 ;;; ------------------------------------------------------------------
 ;;; Major Mode
 ;;; ------------------------------------------------------------------
-
 
 ;;; markdown-mode.el
 (autoload 'markdown-mode "markdown-mode.el"
   "Major mode for editing Markdown files" t)
 (setq auto-mode-alist
       (cons '("\\.markdown" . markdown-mode) auto-mode-alist))
-
 
 ;;; lisp-mode.el
 (add-hook 'emacs-lisp-mode-hook  ;; include lisp-interaction-mode-hook
@@ -554,10 +536,11 @@
                (setq ac-sources (append ac-sources '(ac-source-symbols ac-source-filename))))
              ))
 ;; eldoc-extension.el
-(require-with-url 'eldoc-extension nil t "http://www.emacswiki.org/cgi-bin/wiki/download/eldoc-extension.el")
-(setq eldoc-idle-delay 0.5)
-(setq eldoc-echo-area-use-multiline-p t)
-(add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+(req eldoc-extension "http://www.emacswiki.org/cgi-bin/wiki/download/eldoc-extension.el"
+     (setq eldoc-idle-delay 0.5)
+     (setq eldoc-echo-area-use-multiline-p t)
+     (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+     )
 
 
 ;; js2.el
@@ -578,463 +561,6 @@
           '(lambda ()
              (define-key js2-mode-map (kbd "M-C-h") nil)
              ))
-
-
-;; ruby-mode.el
-(autoload 'ruby-mode "ruby-mode"
-  "Mode for editing ruby source files" t)
-(setq auto-mode-alist
-      (append '(("\\.rb$" . ruby-mode)) auto-mode-alist))
-(setq interpreter-mode-alist (append '(("ruby" . ruby-mode))
-                                     interpreter-mode-alist))
-(autoload 'run-ruby "inf-ruby"
-  "Run an inferior Ruby process")
-(autoload 'inf-ruby-keys "inf-ruby"
-  "Set local key defs for inf-ruby in ruby-mode")
-(add-hook 'ruby-mode-hook
-          '(lambda ()
-            (inf-ruby-keys)))
-
-;;; php-mode.el
-;;; http://sourceforge.net/projects/php-mode/
-(when (require 'php-mode nil t)
-  (add-hook 'php-mode-user-hook
-            '(lambda ()
-               (setq tab-width 4)
-               (setq indent-tabs-mode t)
-               (setq c-basic-offset 4))))
-
-;;; ------------------------------------------------------------------
-;;; applications
-;;; ------------------------------------------------------------------
-
-;;; Dictionary.app + popup.el
-(when (and darwin-p (featurep 'popup))
-  (defvar dict-bin "~/bin/dict"
-    "dict 実行ファイルのパス")
-
-  (defun temp-cancel-read-only (function &optional jaspace-off)
-    "eval temporarily cancel buffer-read-only
-&optional t is turn of jaspace-mode"
-    (let ((read-only-p nil)
-          (jaspace-mode-p nil))
-      (when jaspace-off
-        (when jaspace-mode
-          (jaspace-mode)
-          (setq jaspace-mode-p t)))
-      (when buffer-read-only
-        (toggle-read-only)
-        (setq read-only-p t))
-      (eval function)
-      (when read-only-p
-        (toggle-read-only))
-      (when jaspace-mode-p
-        (jaspace-mode))))
-
-  (defun ns-popup-dictionary ()
-    "マウスカーソルの単語を Mac の辞書でひく"
-    (interactive)
-    (let ((word (substring-no-properties (thing-at-point 'word)))
-          (old-buf (current-buffer))
-          (dict-buf (get-buffer-create "*dictionary.app*"))
-          (dict))
-      (when (and mark-active transient-mark-mode)
-        (setq word (buffer-substring-no-properties (region-beginning) (region-end))))
-      (set-buffer dict-buf)
-      (erase-buffer)
-      (call-process dict-bin
-                    nil "*dictionary.app*" t word
-                    "Japanese-English" "Japanese" "Japanese Synonyms")
-      (setq dict (buffer-string))
-      (set-buffer old-buf)
-      (when (not (eq (length dict) 0))
-        (temp-cancel-read-only '(popup-tip dict :margin t :scroll-bar t) t))))
-
-  (defvar dict-timer nil)
-  (defvar dict-delay 1.0)
-  (defun dict-timer ()
-    (when (and (not (minibufferp))
-               (and mark-active transient-mark-mode))
-      (ns-popup-dictionary)))
-  (setq dict-timer (run-with-idle-timer dict-delay dict-delay 'dict-timer))
-
-  (define-key global-map (kbd "C-c e") 'ns-popup-dictionary))
-
-;;; navi2ch
-(when emacs-private-p
-  (add-to-list 'load-path "~/.emacs.d/navi2ch")
-  (autoload 'navi2ch "navi2ch" "Navigator for 2ch for Emacs" t))
-
-;;; tails-history.el
-;;; http://www.bookshelf.jp/elc/tails-history.el
-(when (locate-library "tails-history")
-  (load-library "tails-history"))
-
-;;; ------------------------------------------------------------------
-;;; Edit
-;;; ------------------------------------------------------------------
-
-;;; rect-mark.el
-(when (require 'rect-mark nil t)
-  (define-key ctl-x-map "r\C-@" 'rm-set-mark)
-  (define-key ctl-x-map [?r ?\C-\ ] 'rm-set-mark)
-  (define-key ctl-x-map "r\C-x" 'rm-exchange-point-and-mark)
-  (define-key ctl-x-map "r\C-w" 'rm-kill-region)
-  (define-key ctl-x-map "r\M-w" 'rm-kill-ring-save)
-  (define-key global-map [S-down-mouse-1] 'rm-mouse-drag-region)
-  (defun set-normal-or-rectangel-mark-command ()
-    (interactive)
-    (cond ((not mark-active)
-           (call-interactively 'set-mark-command))
-          ((not rm-mark-active)
-           (rm-activate-mark)
-           (message "Rectangle mark set"))
-          (t
-           (rm-deactivate-mark)
-           (set-mark-command nil))))
-  (global-set-key (kbd "C-SPC") 'set-normal-or-rectangel-mark-command))
-
-;;; mic-paren.el
-(when (require 'mic-paren nil t)
-  (paren-activate)
-  (setq paren-sexp-mode t))
-
-;;; linum
-(when nt-p
-  (global-linum-mode))
-
-;;; jaspace.el
-(when (require 'jaspace nil t)
-  (setq jaspace-highlight-tabs t))
-
-;;; redo.el
-(when (require-with-url 'redo nil t "http://www.wonderworks.com/download/redo.el")
-  (global-set-key (kbd "M-/") 'redo))
-
-;;; hl-line.el
-;;; hl-line+.el
-(when (require-with-url 'hl-line+ nil t "http://www.emacswiki.org/emacs/download/hl-line+.el")
-  (hl-line-mode))
-
-;;; dmacro.el
-;;; (auto-install-from-url "http://pitecan.com/papers/JSSSTDmacro/dmacro.el")
-(when (autoload-if-found 'dmacro-exec "dmacro" nil t)
-  (global-set-key (kbd "C-t") 'dmacro-exec))
-
-;;; thing-opt.el
-(when (require-with-url 'thing-opt nil t "http://www.emacswiki.org/emacs/download/thing-opt.el")
-  (global-set-key (kbd "M-s") 'upward-mark-thing)
-  (setq upward-mark-thing-list
-        '(;; special thing
-          email
-          url
-          string
-          ;; general thing
-          symbol
-          word
-          ;; up-list
-          (up-list . *)
-          )))
-
-;;; active-region.el
-;;; (auto-install-from-url )
-(when (and (require-with-url 'active-region nil t "http://github.com/snj14/active-region/raw/master/active-region.el")
-           (featurep 'anything))
-  (defun active-region-anything (&optional arg)
-    (interactive "*P")
-    (cond ((consp arg) ;; C-u C-i
-           (anything '(((name       . "Formatting")
-                        (candidates . (indent-region
-                                       align
-                                       fill-region))
-                        (action     . call-interactively))
-                       ((name       . "Editing")
-                        (candidates . (string-rectangle
-                                       delete-rectangle
-                                       iedit-mode
-                                       ))
-                        (action     . call-interactively))
-                       ((name       . "Converting")
-                        (candidates . (upcase-region
-                                       downcase-region
-                                       capitalize-region
-                                       base64-decode-region
-                                       base64-encode-region
-                                       tabify
-                                       untabify))
-                        (action     . call-interactively))
-                       ((name       . "Converting (japanese)")
-                        (candidates . (japanese-hankaku-region
-                                       japanese-hiragana-region
-                                       japanese-katakana-region
-                                       japanese-zenkaku-region))
-                        (action     . call-interactively))
-                       )))
-          ((active-region-multiple-line-p)
-           (call-interactively 'indent-region)
-           (message "indent region."))
-          ))
-  (define-key active-region-mode-map (kbd "C-i") 'active-region-anything)
-  (define-key active-region-mode-map (kbd "M-r") 'active-region-replace)
-  ;; window
-  (defun other-window-or-split ()
-    (interactive)
-    (when (one-window-p)
-      (split-window-horizontally))
-    (other-window 1))
-  (global-set-key (kbd "C-w") 'other-window-or-split)
-  (global-set-key (kbd "M-w") 'delete-other-windows)
-  )
-
-;;; smartchr.el
-(when (require-with-url 'smartchr nil t  "http://github.com/imakado/emacs-smartchr/raw/master/smartchr.el")
-  (global-set-key (kbd "=")  (smartchr '("=" " = " " == " " === ")))
-  (global-set-key (kbd "'")  (smartchr '("'" "'`!!''" "``!!''")))
-  (global-set-key (kbd "\"") (smartchr '("\"" "\"`!!'\"")))
-  (global-set-key (kbd "{")  (smartchr '("{" "{ `!!' }" "{ \"`!!'\" }")))
-  (global-set-key (kbd "(")  (smartchr '("(" "(`!!')")))
-
-  (define-key emacs-lisp-mode-map (kbd ";") (smartchr '("; " ";; " ";;; ")))
-  (define-key lisp-interaction-mode-map (kbd ";") (smartchr '("; " ";; " ";;; "))))
-
-;;; undo-tree
-;;; orig http://www.dr-qubit.org/download.php?file=undo-tree/undo-tree.el
-;;; mod  http://gist.github.com/raw/301447/a9d4a2202e695f950076fbec6fd6fc9407774b6a/undo-tree.el
-(when (require-with-url 'undo-tree nil t "http://gist.github.com/raw/301447/a9d4a2202e695f950076fbec6fd6fc9407774b6a/undo-tree.el")
-  (global-undo-tree-mode))
-
-;;; flush lines in occur buffer
-(define-key occur-mode-map "F"
-  (lambda (str) (interactive "sflush: ")
-    (let ((buffer-read-only))
-      (save-excursion
-        (beginning-of-buffer)
-        (forward-line 1)
-        (beginning-of-line)
-        (flush-lines str)))))
-;;; keep lines in occur buffer
-(define-key occur-mode-map "K"
-  (lambda (str) (interactive "skeep: ")
-    (let ((buffer-read-only))
-      (save-excursion
-        (beginning-of-buffer)
-        (forward-line 1)
-        (beginning-of-line)
-        (keep-lines str)))))
-
-;;; highlight yanked region
-(when (or window-system (>= emacs-major-version 21))
-  (defadvice yank (after ys:highlight-string activate)
-    (let ((ol (make-overlay (mark t) (point))))
-      (overlay-put ol 'face 'highlight)
-      (sit-for 0.5)
-      (delete-overlay ol)))
-  (defadvice yank-pop (after ys:highlight-string activate)
-    (when (eq last-command 'yank)
-      (let ((ol (make-overlay (mark t) (point))))
-        (overlay-put ol 'face 'highlight)
-        (sit-for 0.5)
-        (delete-overlay ol)))))
-
-;;; yasnippet.el
-(when (require 'yasnippet nil t)
-  (yas/initialize)
-  (yas/load-directory "~/.emacs.d/snippets")
-  (define-key yas/keymap (kbd "C-n") 'yas/next-field)
-  (define-key yas/keymap (kbd "C-p") 'yas/prev-field)
-
-  ;;; anything-c-yasnippet.el
-  ;;; http://svn.coderepos.org/share/lang/elisp/anything-c-yasnippet/anything-c-yasnippet.el
-  (require 'anything-c-yasnippet)
-  (setq anything-c-yas-space-match-any-greedy t)
-  (global-set-key (kbd "M-i") 'anything-c-yas-complete)
-  ; (add-to-list 'yas/extra-mode-hooks 'ruby-mode-hook)
-  (setq ac-sources
-        '(ac-source-yasnippet ac-source-words-in-buffer))
-  ;; yasnippet for js2-mode
-  ; (add-to-list 'yas/extra-mode-hooks
-  ;              'js2-mode-hook)
-  )
-
-;;; time-stamp.el
-(require 'time-stamp)
-(add-hook 'before-save-hook 'time-stamp)
-(setq time-stamp-active t)
-(setq time-stamp-start "last updated : ")
-(setq time-stamp-format "%04y-%02m-%02d")
-(setq time-stamp-end " \\|$")
-
-;;; ------------------------------------------------------------------
-;;; File
-;;; ------------------------------------------------------------------
-
-;;; egg.el -- Emacs Got Git
-;;; C-x v d : status
-;;; C-x v l : log
-(when (require-with-url 'egg nil t "http://github.com/bogolisk/egg/raw/master/egg.el")
-  (defun git-log-file ()
-    (interactive)
-    (shell-command (format "git log %s" buffer-file-name) "*git-log*"))
-  (define-key egg-file-cmd-map "l" 'git-log-file))
-
-;;; uniqufy.el
-(require 'uniquify)
-(setq uniquify-buffer-name-style 'post-forward-angle-brackets)
-
-;;; session.el
-(when (require 'session nil t)
-  (setq session-save-file (expand-file-name "~/.emacs.d/.session"))
-  (add-hook 'after-init-hook 'session-initialize))
-
-;;; save *scratch*
-(defun save-scratch-data ()
-  (let ((str (progn
-               (set-buffer (get-buffer "*scratch*"))
-               (buffer-substring-no-properties
-                (point-min) (point-max))))
-        (file "~/.emacs.d/.scratch"))
-    (if (get-file-buffer (expand-file-name file))
-        (setq buf (get-file-buffer (expand-file-name file)))
-      (setq buf (find-file-noselect file)))
-    (set-buffer buf)
-    (erase-buffer)
-    (insert str)
-    (save-buffer)))
-(defadvice save-buffers-kill-emacs
-  (before save-scratch-buffer activate)
-  (save-scratch-data))
-(defun read-scratch-data ()
-  (let ((file "~/.emacs.d/.scratch"))
-    (when (file-exists-p file)
-      (set-buffer (get-buffer "*scratch*"))
-      (erase-buffer)
-      (insert-file-contents file))))
-(read-scratch-data)
-
-
-
-;; reqpen-recent-closed-file
-(defvar recent-closed-files nil)
-(defun collect-recent-closed-files ()
-  (when buffer-file-name
-    (push buffer-file-name recent-closed-files)))
-(add-hook 'kill-buffer-hook 'collect-recent-closed-files)
-(defun reopen-recent-closed-file ()
-  (interactive)
-  (when recent-closed-files
-    (let (path)
-      (while (not (setq path (pop recent-closed-files))))
-      (find-file path))))
-(global-set-key (kbd "C-c C-t u") 'reopen-recent-closed-file)
-
-;;; auto chmod +x
-(when (or darwin-p
-          linux-p)
-  (add-hook 'after-save-hook
-            'executable-make-buffer-file-executable-if-script-p))
-
-;;; delete empty file
-(defun delete-empty-file ()
-  (when (and (buffer-file-name (current-buffer))
-             (= (point-min) (point-max))
-             (y-or-n-p "Delete file and kill buffer?"))
-    (delete-file
-     (buffer-file-name (current-buffer)))
-    (kill-buffer (current-buffer))))
-(add-hook 'after-save-hook 'delete-empty-file)
-
-;;; ------------------------------------------------------------------
-;;; minibuffer
-;;; ------------------------------------------------------------------
-
-;;; minibuf-isearch.el
-(setq minibuf-isearch-fire-keys '("\C-p"))
-(require-with-url 'minibuf-isearch nil t "http://www.sodan.org/~knagano/emacs/minibuf-isearch/minibuf-isearch.el")
-
-;;; cycle-mini.el
-(require-with-url 'cycle-mini nil t "http://joereiss.net/misc/cycle-mini.el")
-
-;;; delete duplicated minibuffer history
-(require 'cl)
-(defun minibuffer-delete-duplicate ()
-  (set minibuffer-history-variable
-       (delete-duplicates (symbol-value minibuffer-history-variable) :test 'equal)))
-(add-hook 'minibuffer-setup-hook 'minibuffer-delete-duplicate)
-
-
-;; use TAB for complete
-(define-key read-expression-map (kbd "TAB") 'lisp-complete-symbol)
-
-;;; minibuffer c-g momorize
-(defadvice abort-recursive-edit (before minibuffer-save activate)
-  (when (eq (selected-window) (active-minibuffer-window))
-    (add-to-history minibuffer-history-variable (minibuffer-contents))))
-
-
-;;; ------------------------------------------------------------------
-;;; search
-;;; ------------------------------------------------------------------
-
-;;; color-moccur.el
-(when (require-with-url 'color-moccur nil t "http://www.bookshelf.jp/elc/color-moccur.el")
-  (setq moccur-split-word t))
-;; (when (require 'migemo nil t)
-;;   (setq moccur-use-migemo t))
-
-;;; anything-c-moccur.el
-(require-with-url 'anything-c-moccur nil t "http://svn.coderepos.org/share/lang/elisp/anything-c-moccur/trunk/anything-c-moccur.el")
-(global-set-key (kbd "M-o") 'anything-c-moccur-occur-by-moccur)
-(global-set-key (kbd "C-M-o") 'anything-c-moccur-dmoccur)
-(global-set-key (kbd "C-M-s") 'anything-c-moccur-isearch-forward)
-(global-set-key (kbd "C-M-r") 'anything-c-moccur-isearch-backward)
-(setq anything-c-moccur-anything-idle-delay 0
-      anything-c-moccur-higligt-info-line-flag t
-      anything-c-moccur-enable-auto-look-flag t
-      anything-c-moccur-enable-initial-pattern t)
-(setq anything-c-source-occur-by-moccur
-  `((name . "Occur by Moccur")
-    (candidates . anything-c-moccur-occur-by-moccur-get-candidates)
-    (action . (("Goto line" . anything-c-moccur-occur-by-moccur-goto-line)))
-    (persistent-action . anything-c-moccur-occur-by-moccur-persistent-action)
-    (init . anything-c-moccur-initialize)
-    (cleanup . anything-c-moccur-clean-up)
-    (match . (identity))
-    (requires-pattern . 1)
-    (delayed)
-    (volatile)))
-
-;; isearch-occur
-(defun isearch-occur ()
-  "Invoke `occur' from within isearch."
-  (interactive)
-  (let ((case-fold-search isearch-case-fold-search))
-    (occur
-     (if isearch-regexp
-         isearch-string (regexp-quote isearch-string)))))
-(define-key isearch-mode-map (kbd "C-o") 'isearch-occur)
-
-;;; refe.el
-;; (require 'refe nil t)
-
-;; ;;; psvn.el
-;; (require 'psvn)
-
-;;; isearch.el
-(setq isearch-lazy-highlight-initial-delay 0)
-
-;;; ------------------------------------------------------------------
-;;; test
-;;; ------------------------------------------------------------------
-
-;;; e2wm
-(require-with-batch 'e2wm nil t "e2wm")
-(global-set-key (kbd "M-+") 'e2wm:start-management)
-
-;;; zencoding-mode.el --- Unfold CSS-selector-like expressions to markup
-(require-with-url 'zencoding-mode nil t "http://github.com/chrisdone/zencoding/raw/master/zencoding-mode.el")
-(add-hook 'sgml-mode-hook 'zencoding-mode) ;; Auto-start on any markup modes
-(add-hook 'html-mode-hook 'zencoding-mode)
-
 ;;; http://download.savannah.gnu.org/releases-noredirect/espresso/espresso.el
 (autoload 'espresso-mode "espresso" nil t)
 
@@ -1118,3 +644,508 @@
   (message "My JS2 hook"))
 
 (add-hook 'js2-mode-hook 'my-js2-mode-hook)
+
+
+;; ruby-mode.el
+(autoload 'ruby-mode "ruby-mode"
+  "Mode for editing ruby source files" t)
+(setq auto-mode-alist
+      (append '(("\\.rb$" . ruby-mode)) auto-mode-alist))
+(setq interpreter-mode-alist (append '(("ruby" . ruby-mode))
+                                     interpreter-mode-alist))
+(autoload 'run-ruby "inf-ruby"
+  "Run an inferior Ruby process")
+(autoload 'inf-ruby-keys "inf-ruby"
+  "Set local key defs for inf-ruby in ruby-mode")
+(add-hook 'ruby-mode-hook
+          '(lambda ()
+            (inf-ruby-keys)))
+
+;;; php-mode.el
+;;; http://sourceforge.net/projects/php-mode/
+(when (require 'php-mode nil t)
+  (add-hook 'php-mode-user-hook
+            '(lambda ()
+               (setq tab-width 4)
+               (setq indent-tabs-mode t)
+               (setq c-basic-offset 4))))
+
+;;; ------------------------------------------------------------------
+;;; applications
+;;; ------------------------------------------------------------------
+
+;;; Dictionary.app + popup.el
+(when (and darwin-p
+           (featurep 'popup))
+  (defvar dict-bin "~/bin/dict"
+    "dict 実行ファイルのパス")
+
+  (defun temp-cancel-read-only (function &optional jaspace-off)
+    "eval temporarily cancel buffer-read-only
+&optional t is turn of jaspace-mode"
+    (let ((read-only-p nil)
+          (jaspace-mode-p nil))
+      (when jaspace-off
+        (when jaspace-mode
+          (jaspace-mode)
+          (setq jaspace-mode-p t)))
+      (when buffer-read-only
+        (toggle-read-only)
+        (setq read-only-p t))
+      (eval function)
+      (when read-only-p
+        (toggle-read-only))
+      (when jaspace-mode-p
+        (jaspace-mode))))
+
+  (defun ns-popup-dictionary ()
+    "マウスカーソルの単語を Mac の辞書でひく"
+    (interactive)
+    (let ((word (substring-no-properties (thing-at-point 'word)))
+          (old-buf (current-buffer))
+          (dict-buf (get-buffer-create "*dictionary.app*"))
+          (dict))
+      (when (and mark-active transient-mark-mode)
+        (setq word (buffer-substring-no-properties (region-beginning) (region-end))))
+      (set-buffer dict-buf)
+      (erase-buffer)
+      (call-process dict-bin
+                    nil "*dictionary.app*" t word
+                    "Japanese-English" "Japanese" "Japanese Synonyms")
+      (setq dict (buffer-string))
+      (set-buffer old-buf)
+      (when (not (eq (length dict) 0))
+        (temp-cancel-read-only '(popup-tip dict :margin t :scroll-bar t) t))))
+
+  (defvar dict-timer nil)
+  (defvar dict-delay 1.0)
+  (defun dict-timer ()
+    (when (and (not (minibufferp))
+               (and mark-active transient-mark-mode))
+      (ns-popup-dictionary)))
+  (setq dict-timer (run-with-idle-timer dict-delay dict-delay 'dict-timer))
+
+  (define-key global-map (kbd "C-c e") 'ns-popup-dictionary))
+
+;;; navi2ch
+(when emacs-private-p
+  (add-to-list 'load-path "~/.emacs.d/navi2ch")
+  (autoload 'navi2ch "navi2ch" "Navigator for 2ch for Emacs" t))
+
+;;; tails-history.el
+;;; http://www.bookshelf.jp/elc/tails-history.el
+(when (locate-library "tails-history")
+  (load-library "tails-history"))
+
+;;; ------------------------------------------------------------------
+;;; Window
+;;; ------------------------------------------------------------------
+
+;;; e2wm
+(lazyload (e2wm:start-management) "e2wm" "e2wm")
+(global-set-key (kbd "M-+") 'e2wm:start-management)
+
+;; windmove.el
+;; shift + <cursor>
+(windmove-default-keybindings)
+(setq windmove-wrap-around t)
+
+
+
+;;; ------------------------------------------------------------------
+;;; Edit
+;;; ------------------------------------------------------------------
+
+;;; zencoding-mode.el --- Unfold CSS-selector-like expressions to markup
+(req zencoding-mode "http://github.com/chrisdone/zencoding/raw/master/zencoding-mode.el"
+     (add-hook 'sgml-mode-hook 'zencoding-mode) ;; Auto-start on any markup modes
+     (add-hook 'html-mode-hook 'zencoding-mode))
+
+;;; auto-complete.el
+(req popup "http://github.com/m2ym/auto-complete/raw/master/popup.el"
+(req auto-complete "http://github.com/m2ym/auto-complete/raw/master/auto-complete.el"
+     (setq ac-auto-start 3)
+     (global-auto-complete-mode t)
+     (define-key ac-complete-mode-map (kbd "C-m") 'ac-complete)
+     (define-key ac-complete-mode-map (kbd "C-n") 'ac-next)
+     (define-key ac-complete-mode-map (kbd "C-p") 'ac-previous)
+     ))
+
+;;; rect-mark.el
+(req rect-mark nil
+  (define-key ctl-x-map "r\C-@" 'rm-set-mark)
+  (define-key ctl-x-map [?r ?\C-\ ] 'rm-set-mark)
+  (define-key ctl-x-map "r\C-x" 'rm-exchange-point-and-mark)
+  (define-key ctl-x-map "r\C-w" 'rm-kill-region)
+  (define-key ctl-x-map "r\M-w" 'rm-kill-ring-save)
+  (define-key global-map [S-down-mouse-1] 'rm-mouse-drag-region)
+  (defun set-normal-or-rectangel-mark-command ()
+    (interactive)
+    (cond ((not mark-active)
+           (call-interactively 'set-mark-command))
+          ((not rm-mark-active)
+           (rm-activate-mark)
+           (message "Rectangle mark set"))
+          (t
+           (rm-deactivate-mark)
+           (set-mark-command nil))))
+  (global-set-key (kbd "C-SPC") 'set-normal-or-rectangel-mark-command))
+
+;;; mic-paren.el
+(req mic-paren nil
+  (paren-activate)
+  (setq paren-sexp-mode t))
+
+;;; linum
+(when nt-p
+  (global-linum-mode))
+
+;;; jaspace.el
+(req jaspace nil
+     (setq jaspace-highlight-tabs t))
+
+;;; redo.el
+(req redo "http://www.wonderworks.com/download/redo.el"
+     (global-set-key (kbd "M-/") 'redo))
+
+;;; hl-line.el
+;;; hl-line+.el
+(req hl-line+ "http://www.emacswiki.org/emacs/download/hl-line+.el"
+     (hl-line-mode))
+
+;;; dmacro.el
+(lazyload (dmacro-exec) "dmacro" "http://pitecan.com/papers/JSSSTDmacro/dmacro.el")
+(global-set-key (kbd "C-t") 'dmacro-exec)
+
+;;; thing-opt.el
+(lazyload (upward-mark-thing) "thing-opt" "http://www.emacswiki.org/emacs/download/thing-opt.el"
+  (setq upward-mark-thing-list
+        '(;; special thing
+          email
+          url
+          string
+          ;; general thing
+          symbol
+          word
+          ;; up-list
+          (up-list . *)
+          )))
+(global-set-key (kbd "M-s") 'upward-mark-thing)
+
+
+;;; active-region.el
+(req active-region "http://github.com/snj14/active-region/raw/master/active-region.el"
+(when (featurep 'anything)
+  (defun active-region-anything (&optional arg)
+    (interactive "*P")
+    (cond ((consp arg) ;; C-u C-i
+           (anything '(((name       . "Formatting")
+                        (candidates . (indent-region
+                                       align
+                                       fill-region))
+                        (action     . call-interactively))
+                       ((name       . "Editing")
+                        (candidates . (string-rectangle
+                                       delete-rectangle
+                                       iedit-mode
+                                       ))
+                        (action     . call-interactively))
+                       ((name       . "Converting")
+                        (candidates . (upcase-region
+                                       downcase-region
+                                       capitalize-region
+                                       base64-decode-region
+                                       base64-encode-region
+                                       tabify
+                                       untabify))
+                        (action     . call-interactively))
+                       ((name       . "Converting (japanese)")
+                        (candidates . (japanese-hankaku-region
+                                       japanese-hiragana-region
+                                       japanese-katakana-region
+                                       japanese-zenkaku-region))
+                        (action     . call-interactively))
+                       )))
+          ((active-region-multiple-line-p)
+           (call-interactively 'indent-region)
+           (message "indent region."))
+          ))
+  (define-key active-region-mode-map (kbd "C-i") 'active-region-anything)
+  (define-key active-region-mode-map (kbd "M-r") 'active-region-replace)
+  ;; window
+  (defun other-window-or-split ()
+    (interactive)
+    (when (one-window-p)
+      (split-window-horizontally))
+    (other-window 1))
+  (global-set-key (kbd "C-w") 'other-window-or-split)
+  (global-set-key (kbd "M-w") 'delete-other-windows)
+  ))
+
+;;; smartchr.el
+(req smartchr "http://github.com/imakado/emacs-smartchr/raw/master/smartchr.el"
+  (global-set-key (kbd "=")  (smartchr '("=" " = " " == " " === ")))
+  (global-set-key (kbd "'")  (smartchr '("'" "'`!!''" "``!!''")))
+  (global-set-key (kbd "\"") (smartchr '("\"" "\"`!!'\"")))
+  (global-set-key (kbd "{")  (smartchr '("{" "{ `!!' }" "{ \"`!!'\" }")))
+  (global-set-key (kbd "(")  (smartchr '("(" "(`!!')")))
+
+  (define-key emacs-lisp-mode-map (kbd ";") (smartchr '("; " ";; " ";;; ")))
+  (define-key lisp-interaction-mode-map (kbd ";") (smartchr '("; " ";; " ";;; "))))
+
+;;; undo-tree
+;;; orig http://www.dr-qubit.org/download.php?file=undo-tree/undo-tree.el
+;;; mod  http://gist.github.com/raw/301447/a9d4a2202e695f950076fbec6fd6fc9407774b6a/undo-tree.el
+(req undo-tree "http://gist.github.com/raw/301447/a9d4a2202e695f950076fbec6fd6fc9407774b6a/undo-tree.el"
+  (global-undo-tree-mode))
+
+;;; flush lines in occur buffer
+(define-key occur-mode-map "F"
+  (lambda (str) (interactive "sflush: ")
+    (let ((buffer-read-only))
+      (save-excursion
+        (beginning-of-buffer)
+        (forward-line 1)
+        (beginning-of-line)
+        (flush-lines str)))))
+;;; keep lines in occur buffer
+(define-key occur-mode-map "K"
+  (lambda (str) (interactive "skeep: ")
+    (let ((buffer-read-only))
+      (save-excursion
+        (beginning-of-buffer)
+        (forward-line 1)
+        (beginning-of-line)
+        (keep-lines str)))))
+
+;;; highlight yanked region
+(when (or window-system (>= emacs-major-version 21))
+  (defadvice yank (after ys:highlight-string activate)
+    (let ((ol (make-overlay (mark t) (point))))
+      (overlay-put ol 'face 'highlight)
+      (sit-for 0.5)
+      (delete-overlay ol)))
+  (defadvice yank-pop (after ys:highlight-string activate)
+    (when (eq last-command 'yank)
+      (let ((ol (make-overlay (mark t) (point))))
+        (overlay-put ol 'face 'highlight)
+        (sit-for 0.5)
+        (delete-overlay ol)))))
+
+;;; yasnippet.el
+(when (require 'yasnippet nil t)
+  (yas/initialize)
+  (yas/load-directory "~/.emacs.d/snippets")
+  (define-key yas/keymap (kbd "C-n") 'yas/next-field)
+  (define-key yas/keymap (kbd "C-p") 'yas/prev-field)
+
+  ;;; anything-c-yasnippet.el
+  ;;; http://svn.coderepos.org/share/lang/elisp/anything-c-yasnippet/anything-c-yasnippet.el
+  (require 'anything-c-yasnippet)
+  (setq anything-c-yas-space-match-any-greedy t)
+  (global-set-key (kbd "M-i") 'anything-c-yas-complete)
+  ; (add-to-list 'yas/extra-mode-hooks 'ruby-mode-hook)
+  (setq ac-sources
+        '(ac-source-yasnippet ac-source-words-in-buffer))
+  ;; yasnippet for js2-mode
+  ; (add-to-list 'yas/extra-mode-hooks
+  ;              'js2-mode-hook)
+  )
+
+;;; time-stamp.el
+(req time-stamp nil
+     (add-hook 'before-save-hook 'time-stamp)
+     (setq time-stamp-active t)
+     (setq time-stamp-start "last updated : ")
+     (setq time-stamp-format "%04y-%02m-%02d")
+     (setq time-stamp-end " \\|$")
+     )
+
+;;; ------------------------------------------------------------------
+;;; File
+;;; ------------------------------------------------------------------
+
+;;; backup-directory
+(setq make-backup-files t)
+(setq backup-directory-alist
+      (cons (cons "\\.*$" (expand-file-name "~/backup"))
+            backup-directory-alist))
+
+;;; egg.el -- Emacs Got Git
+;;; C-x v d : status
+;;; C-x v l : log
+(req egg "http://github.com/bogolisk/egg/raw/master/egg.el"
+     (defun git-log-file ()
+       (interactive)
+       (shell-command (format "git log %s" buffer-file-name) "*git-log*"))
+     (define-key egg-file-cmd-map "l" 'git-log-file))
+
+;;; uniquify.el
+(req uniquify nil
+     (setq uniquify-buffer-name-style 'post-forward-angle-brackets)
+     )
+
+;;; session.el
+(req session nil
+     (setq session-save-file (expand-file-name "~/.emacs.d/.session"))
+     (add-hook 'after-init-hook 'session-initialize))
+
+;;; save *scratch*
+(defun save-scratch-data ()
+  (let ((str (progn
+               (set-buffer (get-buffer "*scratch*"))
+               (buffer-substring-no-properties
+                (point-min) (point-max))))
+        (file "~/.emacs.d/.scratch"))
+    (if (get-file-buffer (expand-file-name file))
+        (setq buf (get-file-buffer (expand-file-name file)))
+      (setq buf (find-file-noselect file)))
+    (set-buffer buf)
+    (erase-buffer)
+    (insert str)
+    (save-buffer)))
+(defadvice save-buffers-kill-emacs
+  (before save-scratch-buffer activate)
+  (save-scratch-data))
+(defun read-scratch-data ()
+  (let ((file "~/.emacs.d/.scratch"))
+    (when (file-exists-p file)
+      (set-buffer (get-buffer "*scratch*"))
+      (erase-buffer)
+      (insert-file-contents file))))
+(read-scratch-data)
+
+;; reqpen-recent-closed-file
+(defvar recent-closed-files nil)
+(defun collect-recent-closed-files ()
+  (when buffer-file-name
+    (push buffer-file-name recent-closed-files)))
+(add-hook 'kill-buffer-hook 'collect-recent-closed-files)
+(defun reopen-recent-closed-file ()
+  (interactive)
+  (when recent-closed-files
+    (let (path)
+      (while (not (setq path (pop recent-closed-files))))
+      (find-file path))))
+(global-set-key (kbd "C-c C-t u") 'reopen-recent-closed-file)
+
+;;; auto chmod +x
+(when (or darwin-p
+          linux-p)
+  (add-hook 'after-save-hook
+            'executable-make-buffer-file-executable-if-script-p))
+
+;;; delete empty file
+(defun delete-empty-file ()
+  (when (and (buffer-file-name (current-buffer))
+             (= (point-min) (point-max))
+             (y-or-n-p "Delete file and kill buffer?"))
+    (delete-file
+     (buffer-file-name (current-buffer)))
+    (kill-buffer (current-buffer))))
+(add-hook 'after-save-hook 'delete-empty-file)
+
+;;; ------------------------------------------------------------------
+;;; minibuffer
+;;; ------------------------------------------------------------------
+
+;;; minibuf-isearch.el
+(setq minibuf-isearch-fire-keys '("\C-p"))
+(req minibuf-isearch "http://www.sodan.org/~knagano/emacs/minibuf-isearch/minibuf-isearch.el")
+
+;;; cycle-mini.el
+(req cycle-mini "http://joereiss.net/misc/cycle-mini.el")
+
+;;; delete duplicated minibuffer history
+;;; (require 'cl)
+(defun minibuffer-delete-duplicate ()
+  (set minibuffer-history-variable
+       (delete-duplicates (symbol-value minibuffer-history-variable) :test 'equal)))
+(add-hook 'minibuffer-setup-hook 'minibuffer-delete-duplicate)
+
+;; use TAB for complete
+(define-key read-expression-map (kbd "TAB") 'lisp-complete-symbol)
+
+;;; minibuffer C-g memorize
+(defadvice abort-recursive-edit (before minibuffer-save activate)
+  (when (eq (selected-window) (active-minibuffer-window))
+    (add-to-history minibuffer-history-variable (minibuffer-contents))))
+
+
+;;; ------------------------------------------------------------------
+;;; Search
+;;; ------------------------------------------------------------------
+
+;;; migemo.el
+(when linux-p
+   ;; sudo apt-get install migemo
+  (load "migemo"))
+(when darwin-p
+    (setq migemo-command "/usr/local/bin/cmigemo")
+    (setq migemo-options '("-q" "--emacs"))
+    (setq migemo-dictionary "/usr/local/share/migemo/euc-jp/migemo-dict")
+    (setq migemo-user-dictionary nil)
+    (setq migemo-regex-dictionary nil)
+    (setq migemo-use-pattern-alist nil)
+    (setq migemo-use-frequent-pattern-alist nil)
+    (setq migemo-pattern-alist-length 1024)
+    (load-library "migemo")
+    (migemo-init))
+
+;;; color-moccur.el
+(req color-moccur "http://www.bookshelf.jp/elc/color-moccur.el"
+     (setq moccur-split-word t)
+     (when (featurep 'migemo)
+       (setq moccur-use-migemo t))
+     )
+
+;;; anything-c-moccur.el
+(lazyload (anything-c-moccur-occur-by-moccur
+           anything-c-moccur-dmoccur
+           anything-c-moccur-isearch-forward
+           anything-c-moccur-isearch-backward)
+          "anything-c-moccur"  "http://svn.coderepos.org/share/lang/elisp/anything-c-moccur/trunk/anything-c-moccur.el"
+    (global-set-key (kbd "M-o") 'anything-c-moccur-occur-by-moccur)
+    (global-set-key (kbd "C-M-o") 'anything-c-moccur-dmoccur)
+    (global-set-key (kbd "C-M-s") 'anything-c-moccur-isearch-forward)
+    (global-set-key (kbd "C-M-r") 'anything-c-moccur-isearch-backward)
+    (setq anything-c-moccur-anything-idle-delay 0
+          anything-c-moccur-higligt-info-line-flag t
+          anything-c-moccur-enable-auto-look-flag t
+          anything-c-moccur-enable-initial-pattern t)
+    (setq anything-c-source-occur-by-moccur
+      `((name . "Occur by Moccur")
+        (candidates . anything-c-moccur-occur-by-moccur-get-candidates)
+        (action . (("Goto line" . anything-c-moccur-occur-by-moccur-goto-line)))
+        (persistent-action . anything-c-moccur-occur-by-moccur-persistent-action)
+        (init . anything-c-moccur-initialize)
+        (cleanup . anything-c-moccur-clean-up)
+        (match . (identity))
+        (requires-pattern . 1)
+        (delayed)
+        (volatile)))
+    )
+
+;; isearch-occur
+(defun isearch-occur ()
+  "Invoke `occur' from within isearch."
+  (interactive)
+  (let ((case-fold-search isearch-case-fold-search))
+    (occur
+     (if isearch-regexp
+         isearch-string (regexp-quote isearch-string)))))
+(define-key isearch-mode-map (kbd "C-o") 'isearch-occur)
+
+;; refe.el
+;; (require 'refe nil t)
+
+;; ;; psvn.el
+;; (require 'psvn)
+
+;; isearch.el
+(setq isearch-lazy-highlight-initial-delay 0)
+
+;;; ------------------------------------------------------------------
+;;; test
+;;; ------------------------------------------------------------------
+
