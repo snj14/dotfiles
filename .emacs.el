@@ -1016,6 +1016,12 @@
       (set-buffer (get-buffer "*scratch*"))
       (erase-buffer)
       (insert-file-contents file))))
+(add-hook 'kill-buffer-query-functions
+          (function (lambda ()
+                      (if (string= "*scratch*" (buffer-name))
+                          (progn (message "*scratch* buffer is protected from kill-buffer.")
+                                 nil)
+                        t))))
 (read-scratch-data)
 
 ;; reqpen-recent-closed-file
