@@ -751,6 +751,14 @@
 
 ;;; e2wm
 (lazyload (e2wm:start-management) "e2wm" "e2wm")
+(setq e2wm:c-code-recipe
+  '(| (:left-size-ratio 0.2)
+      (- (:upper-size-ratio 0.7)
+         files history)
+      (- (:upper-size-ratio 0.7)
+         (| (:right-size-ratio 0.2)
+            main imenu)
+         sub)))
 (global-set-key (kbd "M-+") 'e2wm:start-management)
 
 ;; windmove.el
