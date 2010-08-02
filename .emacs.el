@@ -1086,7 +1086,8 @@
 ;;; ------------------------------------------------------------------
 
 ;;; migemo.el
-(when linux-p
+(when (and linux-p
+           (locate-library "migemo"))
    ;; sudo apt-get install migemo
   (load "migemo"))
 (when darwin-p
