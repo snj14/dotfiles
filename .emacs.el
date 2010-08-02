@@ -965,6 +965,9 @@
 ;;; File
 ;;; ------------------------------------------------------------------
 
+;;; don't ask when open symlink file
+(setq vc-follow-symlinks t)
+
 ;;; backup-directory
 (setq make-backup-files t)
 (setq backup-directory-alist
