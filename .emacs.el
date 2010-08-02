@@ -357,6 +357,7 @@
 (setq-default indicate-buffer-boundaries t);; emphasize EOF (for GUI)
 (set-face-foreground 'fringe "IndianRed")  ;; fringe
 (set-face-background 'fringe "gray10")     ;; fringe
+(setq undo-limit 100000)
 
 ;;; ------------------------------------------------------------------
 ;;; Anything
@@ -439,6 +440,13 @@
 ;;; ------------------------------------------------------------------
 ;;; Dired
 ;;; ------------------------------------------------------------------
+
+; dired::バッファを新しく開かない
+(defun dired-find-alternate-file ()
+  "In dired, visit this file or directory instead of the dired buffer."
+  (interactive)
+  (set-buffer-modified-p nil)
+  (find-alternate-file (dired-get-filename)))
 
 ;; emphasize file that modified today
 (defface my-face-f-2 '((t (:foreground "GreenYellow"))) nil)
