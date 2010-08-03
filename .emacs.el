@@ -441,12 +441,13 @@
 ;;; Dired
 ;;; ------------------------------------------------------------------
 
-; dired::バッファを新しく開かない
-(defun dired-find-alternate-file ()
-  "In dired, visit this file or directory instead of the dired buffer."
-  (interactive)
-  (set-buffer-modified-p nil)
-  (find-alternate-file (dired-get-filename)))
+;; ls option
+(setq dired-listing-switches "-alh")
+
+;; open without create buffer
+(add-hook 'dired-load-hook
+          '(lambda ()
+             (define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file)))
 
 ;; emphasize file that modified today
 (defface my-face-f-2 '((t (:foreground "GreenYellow"))) nil)
@@ -462,68 +463,89 @@
               (list
                '(my-dired-today-search . my-face-f-2)))))
 
-;; auto incremental search (dired)
-(defvar my-ex-isearch-next      (kbd "C-r"))
-(defvar my-ex-isearch-prev      (kbd "C-e"))
-(defvar my-ex-isearch-backspace (kbd "C-h"))
-(defvar my-ex-isearch-return    (kbd "C-g"))
-(defun my-ex-isearch (REGEX1 REGEX2 FUNC1 FUNC2 RPT)
-  (interactive)
-  (let ((input last-command-char)
-        (inhibit-quit t)
-        (oldpoint (point)) regx str)
-    (save-match-data
-      (catch 'END
-        (while t
-          (funcall FUNC1)
-          (cond
-           ;; character
-           ((and (integerp input) (>= input ?!)(<= input ?~)
-                 (not (and (>= input ?A)(<= input ?Z))))
-            (setq str (concat str (char-to-string input)))
-            (setq regx (concat REGEX1 str REGEX2))
-            (re-search-forward regx nil t nil))
-           ;; backspace
-           ((and (integerp input)
-                 (or (eq 'backspace input)
-                     (= input (string-to-char my-ex-isearch-backspace))))
-            (setq str (if (eq 0 (length str)) str (substring str 0 -1)))
-            (setq regx (concat REGEX1 str REGEX2))
-            (goto-char oldpoint)
-            (re-search-forward regx nil t nil))
-           ;; next
-           ((and (integerp input) (= input (string-to-char my-ex-isearch-next)))
-            (re-search-forward regx nil t RPT))
-           ;; previous
-           ((and (integerp input) (= input (string-to-char my-ex-isearch-prev)))
-            (re-search-backward regx nil t nil))
-           ;; return
-           ((and (integerp input) (= input (string-to-char my-ex-isearch-return)))
-            (goto-char oldpoint)
-            (message "return")
-            (throw 'END nil))
-           ;; other command
-           (t
-            (setq unread-command-events (append (list input) unread-command-events))
-            (throw 'END nil)))
-          (funcall FUNC2)
-;          (highlinehighlight-current-line)
-          (message str)
-          (setq input (read-event)))))))
-(defun my-dired-isearch()
-  (interactive)
-  (my-ex-isearch "[0-9] " "[^ \n]+$" (lambda()(backward-char 3)) 'dired-move-to-filename 2))
-(defun my-dired-isearch-define-key (str)
-  (let ((i 0))
-    (while (< i (length str))
-      (define-key dired-mode-map (substring str i (1+ i)) 'my-dired-isearch)
-      (setq i (1+ i)))))
+;; wdired.el
+(lazyload (wdired-change-to-wdired-mode) "wdired" "http://www.emacswiki.org/cgi-bin/wiki/download/wdired.el")
+(add-hook 'dired-load-hook
+          '(lambda ()
+             (define-key dired-mode-map (kbd "r") 'wdired-change-to-wdired-mode)))
+
+;; sort menu by anything
+(defvar dired-various-sort-type
+  '(("S" . "size")
+    ("X" . "extension")
+    ("v" . "version")
+    ("t" . "date")
+    (""  . "name")))
+(defun dired-various-sort-change (sort-type-alist &optional prior-pair)
+  (when (eq major-mode 'dired-mode)
+    (let* (case-fold-search
+           get-next
+           (options
+            (mapconcat 'car sort-type-alist ""))
+           (opt-desc-pair
+            (or prior-pair
+                (catch 'found
+                  (dolist (pair sort-type-alist)
+                    (when get-next
+                      (throw 'found pair))
+                    (setq get-next (string-match (car pair) dired-actual-switches)))
+                  (car sort-type-alist)))))
+      (setq dired-actual-switches
+            (concat "-l" (dired-replace-in-string (concat "[l" options "-]")
+                                                  ""
+                                                  dired-actual-switches)
+                    (car opt-desc-pair)))
+      (setq mode-name
+            (concat "Dired by " (cdr opt-desc-pair)))
+      (force-mode-line-update)
+      (revert-buffer))))
+(defun dired-various-sort-change-or-edit (&optional arg)
+  "Hehe"
+  (interactive "P")
+  (when dired-sort-inhibit
+    (error "Cannot sort this dired buffer"))
+  (if arg
+      (dired-sort-other
+       (read-string "ls switches (must contain -l): " dired-actual-switches))
+    (dired-various-sort-change dired-various-sort-type)))
+(defvar anything-c-source-dired-various-sort
+  '((name . "Dired various sort type")
+    (candidates . (lambda ()
+                    (mapcar (lambda (x)
+                              (cons (concat (cdr x) " (" (car x) ")") x))
+                            dired-various-sort-type)))
+    (action . (("Set sort type" . (lambda (candidate)
+                                    (dired-various-sort-change dired-various-sort-type candidate)))))
+    ))
 (add-hook 'dired-mode-hook
           '(lambda ()
-             (my-dired-isearch-define-key "abcdefghijklmnopqrstuvwxyz0123456789_.-+~#")
+             (define-key dired-mode-map "s" 'dired-various-sort-change-or-edit)
+             (define-key dired-mode-map "c"
+               '(lambda ()
+                  (interactive)
+                  (cond ((featurep 'anything)
+                         (anything '(anything-c-source-dired-various-sort)))
+                        (t
+                         (message "at first, install anything!")))))))
+
+;; coloring
+(add-hook 'dired-mode-hook
+          '(lambda ()
+             (defvar *original-dired-font-lock-keywords* (or dired-font-lock-keywords nil))
+             (defun dired-highlight-by-extensions (highlight-list)
+               "highlight-list accept list of (regexp [regexp] ... face)."
+               (let ((lst nil))
+                 (dolist (highlight highlight-list)
+                   (push `(,(concat "\\.\\(" (regexp-opt (butlast highlight)) "\\)$")
+                           (".+" (dired-move-to-filename)
+                            nil (0 ,(car (last highlight)))))
+                         lst))
+                 (setq dired-font-lock-keywords
+                       (append *original-dired-font-lock-keywords* lst))))
+             (dired-highlight-by-extensions
+              '(("txt" font-lock-variable-name-face)
+                ("lisp" "el" "pl" "c" "h" "cc" "js" font-lock-constant-face)))
              ))
-(require 'dired)
-(define-key dired-mode-map "Q" 'quit-window)
 
 ;;; ------------------------------------------------------------------
 ;;; Major Mode
