@@ -1,4 +1,4 @@
-;; last updated : 2010-08-01
+;; last updated : 2010-08-04
 
 ;;; ------------------------------------------------------------------
 ;;; function
@@ -358,6 +358,9 @@
 (set-face-foreground 'fringe "IndianRed")  ;; fringe
 (set-face-background 'fringe "gray10")     ;; fringe
 (setq undo-limit 100000)
+(setq scroll-step 1) ;; scrollは1行ずつ
+(setq read-file-name-completion-ignore-case t) ;; file-nameの補完は大文字小文字関係なく
+
 
 ;;; ------------------------------------------------------------------
 ;;; Anything
