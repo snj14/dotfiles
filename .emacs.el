@@ -28,7 +28,7 @@
             '(progn
                ,@body)))
          ((not ,src)
-          (message (format "library not found : %S" (symbol-name ',lib))))
+          (message (format "library not found : %S" ,lib)))
          ((string-match "^http" ,src)
           (message (format "(auto-install-from-url %S)" ,src)))
          (t
