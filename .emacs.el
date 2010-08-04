@@ -148,13 +148,15 @@
 	;;(setq my-font-height 90)
 	;; (setq my-font-height 105)
 	;; (setq my-font-height 120)
-	(setq my-font-height 150)
+	;; (setq my-font-height 150)
+	(setq my-font-height 170)
 	;;(setq my-font "Monospace")
 	;;(setq my-font "Inconsolata")
 	(setq my-font "Takaoゴシック")
+               (setq my-font-ja "Takaoゴシック")
 	;;(setq my-font-ja "VL ゴシック")
 	;;(setq my-font-ja "Takaoゴシック")
-	(setq my-font-ja "IPAゴシック")
+	;; (setq my-font-ja "IPAゴシック")
 
 	(setq face-font-rescale-alist
 	      '(("-cdac$" . 1.3)))
