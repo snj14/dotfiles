@@ -573,12 +573,12 @@
                (make-local-variable 'ac-sources)
                (setq ac-sources (append ac-sources '(ac-source-symbols ac-source-filename))))
              ))
+
 ;; eldoc-extension.el
-(req eldoc-extension "http://www.emacswiki.org/cgi-bin/wiki/download/eldoc-extension.el"
+(lazyload (turn-on-eldoc-mode) "eldoc-extension" "http://www.emacswiki.org/cgi-bin/wiki/download/eldoc-extension.el"
   (setq eldoc-idle-delay 0.5)
-  (setq eldoc-echo-area-use-multiline-p t)
-  (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
-  )
+  (setq eldoc-echo-area-use-multiline-p t))
+(add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
 
 
 ;; js2.el
@@ -684,25 +684,18 @@
 
 (add-hook 'js2-mode-hook 'my-js2-mode-hook)
 
-
 ;; ruby-mode.el
-(autoload 'ruby-mode "ruby-mode"
-  "Mode for editing ruby source files" t)
+(lazyload (run-ruby inf-ruby-keys) "inf-ruby" nil)
+(lazyload (ruby-mode) "ruby-mode" nil
+  (add-hook 'ruby-mode-hook 'inf-ruby-keys))
 (setq auto-mode-alist
       (append '(("\\.rb$" . ruby-mode)) auto-mode-alist))
-(setq interpreter-mode-alist (append '(("ruby" . ruby-mode))
-                                     interpreter-mode-alist))
-(autoload 'run-ruby "inf-ruby"
-  "Run an inferior Ruby process")
-(autoload 'inf-ruby-keys "inf-ruby"
-  "Set local key defs for inf-ruby in ruby-mode")
-(add-hook 'ruby-mode-hook
-          '(lambda ()
-            (inf-ruby-keys)))
+(setq interpreter-mode-alist
+      (append '(("ruby" . ruby-mode)) interpreter-mode-alist))
 
 ;;; php-mode.el
 ;;; http://sourceforge.net/projects/php-mode/
-(when (require 'php-mode nil t)
+(lazyload (php-mode) "php-mode" nil
   (add-hook 'php-mode-user-hook
             '(lambda ()
                (setq tab-width 4)
