@@ -450,6 +450,7 @@
 (setq dired-listing-switches "-alh")
 
 ;; open without create buffer
+(put 'dired-find-alternate-file 'disabled nil)
 (add-hook 'dired-load-hook
           '(lambda ()
              (define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file)))
