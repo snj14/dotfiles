@@ -1,4 +1,4 @@
-;; last updated : 2010-08-04
+;; last updated : 2010-08-05
 
 ;;; ------------------------------------------------------------------
 ;;; function
@@ -566,38 +566,41 @@
 (add-hook 'emacs-lisp-mode-hook  ;; include lisp-interaction-mode-hook
           '(lambda ()
              (define-key emacs-lisp-mode-map (kbd "C-j") 'eval-print-last-sexp)
+             (put 'req 'lisp-indent-function 'defun)
+             (put 'lazyload 'lisp-indent-function 'defun)
              (when (featurep 'auto-complete)
                (make-local-variable 'ac-sources)
                (setq ac-sources (append ac-sources '(ac-source-symbols ac-source-filename))))
              ))
 ;; eldoc-extension.el
 (req eldoc-extension "http://www.emacswiki.org/cgi-bin/wiki/download/eldoc-extension.el"
-     (setq eldoc-idle-delay 0.5)
-     (setq eldoc-echo-area-use-multiline-p t)
-     (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
-     )
+  (setq eldoc-idle-delay 0.5)
+  (setq eldoc-echo-area-use-multiline-p t)
+  (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+  )
 
 
 ;; js2.el
-(autoload 'js2-mode "js2" nil t)
+(lazyload (js2-mode) "js2" "http://js2-mode.googlecode.com/files/js2-20090723b.el"
+  (setq js2-cleanup-whitespace nil
+        js2-mirror-mode nil ; don't auto complete close paren
+        ;;                    js2-bounce-indent-flag nil
+        tab-width 4          ; tab
+        js2-basic-offset 4   ; indent
+        js2-strict-missing-semi-warning nil ; missing ; is not warning
+        js2-mode-show-strict-warnings nil
+        ;;      js2-auto-indent-flag nil    ; dont indent by { } ( ) [ ] : ; , *
+        js2-rebind-eol-bol-keys nil ; dont rebind C-a C-e
+        js2-highlight-level 3
+        ))
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
-(setq js2-cleanup-whitespace nil
-      js2-mirror-mode nil ; don't auto complete close paren
-      ;;                    js2-bounce-indent-flag nil
-      tab-width 4          ; tab
-      js2-basic-offset 4   ; indent
-      js2-strict-missing-semi-warning nil ; missing ; is not warning
-      js2-mode-show-strict-warnings nil
-;;      js2-auto-indent-flag nil    ; dont indent by { } ( ) [ ] : ; , *
-      js2-rebind-eol-bol-keys nil ; dont rebind C-a C-e
-      js2-highlight-level 3
-      )
+
 (add-hook 'js2-mode-hook
           '(lambda ()
              (define-key js2-mode-map (kbd "M-C-h") nil)
              ))
-;;; http://download.savannah.gnu.org/releases-noredirect/espresso/espresso.el
-(autoload 'espresso-mode "espresso" nil t)
+;;; espresso
+(lazyload (espresso-mode) "espresso" "http://download.savannah.gnu.org/releases-noredirect/espresso/espresso.el")
 
 (defun my-js2-indent-function ()
   (interactive)
@@ -801,18 +804,18 @@
 
 ;;; zencoding-mode.el --- Unfold CSS-selector-like expressions to markup
 (req zencoding-mode "http://github.com/chrisdone/zencoding/raw/master/zencoding-mode.el"
-     (add-hook 'sgml-mode-hook 'zencoding-mode) ;; Auto-start on any markup modes
-     (add-hook 'html-mode-hook 'zencoding-mode))
+  (add-hook 'sgml-mode-hook 'zencoding-mode) ;; Auto-start on any markup modes
+  (add-hook 'html-mode-hook 'zencoding-mode))
 
 ;;; auto-complete.el
 (req popup "http://github.com/m2ym/auto-complete/raw/master/popup.el"
 (req auto-complete "http://github.com/m2ym/auto-complete/raw/master/auto-complete.el"
-     (setq ac-auto-start 3)
-     (global-auto-complete-mode t)
-     (define-key ac-complete-mode-map (kbd "C-m") 'ac-complete)
-     (define-key ac-complete-mode-map (kbd "C-n") 'ac-next)
-     (define-key ac-complete-mode-map (kbd "C-p") 'ac-previous)
-     ))
+  (setq ac-auto-start 3)
+  (global-auto-complete-mode t)
+  (define-key ac-complete-mode-map (kbd "C-m") 'ac-complete)
+  (define-key ac-complete-mode-map (kbd "C-n") 'ac-next)
+  (define-key ac-complete-mode-map (kbd "C-p") 'ac-previous)
+  ))
 
 ;;; rect-mark.el
 (req rect-mark nil
@@ -845,20 +848,21 @@
 
 ;;; jaspace.el
 (req jaspace nil
-     (setq jaspace-highlight-tabs t))
+  (setq jaspace-highlight-tabs t))
 
 ;;; redo.el
 (req redo "http://www.wonderworks.com/download/redo.el"
-     (global-set-key (kbd "M-/") 'redo))
+  (global-set-key (kbd "M-/") 'redo))
 
 ;;; hl-line.el
 ;;; hl-line+.el
 (req hl-line+ "http://www.emacswiki.org/emacs/download/hl-line+.el"
-     (hl-line-mode))
+  (hl-line-mode))
 
 ;;; dmacro.el
 (lazyload (dmacro-exec) "dmacro" "http://pitecan.com/papers/JSSSTDmacro/dmacro.el")
-(global-set-key (kbd "C-t") 'dmacro-exec)
+(defconst *dmacro-key* (kbd "C-t") "繰返し指定キー")
+(global-set-key *dmacro-key* 'dmacro-exec)
 
 ;;; thing-opt.el
 (lazyload (upward-mark-thing) "thing-opt" "http://www.emacswiki.org/emacs/download/thing-opt.el"
@@ -996,13 +1000,12 @@
   )
 
 ;;; time-stamp.el
-(req time-stamp nil
-     (add-hook 'before-save-hook 'time-stamp)
-     (setq time-stamp-active t)
-     (setq time-stamp-start "last updated : ")
-     (setq time-stamp-format "%04y-%02m-%02d")
-     (setq time-stamp-end " \\|$")
-     )
+(lazyload (time-stamp) "time-stamp" nil
+  (setq time-stamp-active t)
+  (setq time-stamp-start "last updated : ")
+  (setq time-stamp-format "%04y-%02m-%02d")
+  (setq time-stamp-end " \\|$"))
+(add-hook 'before-save-hook 'time-stamp)
 
 ;;; ------------------------------------------------------------------
 ;;; File
