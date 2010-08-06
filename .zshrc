@@ -8,15 +8,19 @@ export PATH=${HOME}/bin:/opt/local/bin:/usr/local/bin:/var/lib/gems/1.9.1/bin/:$
 export GISTY_DIR="$HOME/dev/gists"
 
 # $PAGER
-if [ `which lv 2> /dev/null` ]; then
+if [ `which lv > /dev/null` ]; then
     export PAGER=lv
-elif [ `which less 2> /dev/null` ]; then
+elif [ `which less > /dev/null` ]; then
     export PAGER=less
 fi
 
 # $EDITOR
-if [ `which emacs 2> /dev/null` ]; then
+if [ `which emacs > /dev/null` ]; then
     export EDITOR=emacs
+elif [ `which vim > /dev/null` ]; then
+    export EDITOR=vim
+elif [ `which vi > /dev/null` ]; then
+    export EDITOR=vi
 fi
 
 
