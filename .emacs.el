@@ -1,4 +1,4 @@
-;; last updated : 2010-08-05
+;; last updated : 2010-08-31
 
 ;;; ------------------------------------------------------------------
 ;;; function
@@ -115,12 +115,13 @@
 ;; 色の設定
 (when linux-p
   (set-frame-parameter nil 'alpha 80)
-  (set-background-color "black")
-  (set-foreground-color "snow1")
-  (set-cursor-color "DarkOrange")
   (when window-system
     (add-hook 'after-init-hook 'server-start)
-    (setq x-select-enable-clipboard t)))
+    (setq x-select-enable-clipboard t))
+  (load-library "color-theme-my")
+  (my-color-theme)
+  ;; (color-theme-arjen)
+  )
 
 ;;; ------------------------------------------------------------------
 ;;; Font
