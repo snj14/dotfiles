@@ -10,7 +10,7 @@ do
     then
         echo ;
         echo create $PWD/$dotfile ...
-        ln -is "$PWD/$dotfile" $HOME
+        ln -is "$PWD/$dotfile" $HOME/
     fi
 
 done
