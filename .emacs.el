@@ -842,7 +842,7 @@
   (global-linum-mode))
 
 ;;; jaspace.el
-(req jaspace nil
+(req jaspace "http://homepage3.nifty.com/satomii/software/jaspace.el"
   (setq jaspace-highlight-tabs t))
 
 ;;; redo.el
