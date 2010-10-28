@@ -225,7 +225,7 @@ key.setViewKey([['<'], [',']], function () {
     goDoCommand("cmd_scrollLeft");
 }, '左へスクロール');
 
-key.setViewKey([['b'], ['M-v']], function () {
+key.setViewKey(['M-v'], function () {
     goDoCommand("cmd_scrollPageUp");
 }, '一画面分スクロールアップ');
 
@@ -253,9 +253,9 @@ key.setViewKey('R', function (aEvent) {
     BrowserReload();
 }, '更新');
 
-key.setViewKey('B', function (aEvent) {
-    BrowserBack();
-}, '戻る');
+// key.setViewKey('B', function (aEvent) {
+//     BrowserBack();
+// }, '戻る');
 
 key.setViewKey('F', function (aEvent) {
     BrowserForward();
