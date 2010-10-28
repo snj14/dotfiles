@@ -1,4 +1,4 @@
-;; last updated : 2010-08-31
+;; last updated : 2010-10-29
 
 ;;; ------------------------------------------------------------------
 ;;; function
@@ -405,8 +405,6 @@
               anything-c-source-files-in-current-dir
               anything-c-source-file-name-history
               anything-c-source-locate
-              anything-c-source-info-pages
-              anything-c-source-man-pages
               anything-c-source-emacs-commands))
 
   ;; M-x
@@ -1015,14 +1013,19 @@
       (cons (cons "\\.*$" (expand-file-name "~/backup"))
             backup-directory-alist))
 
-;;; egg.el -- Emacs Got Git
-;;; C-x v d : status
-;;; C-x v l : log
-(req egg "http://github.com/bogolisk/egg/raw/master/egg.el"
-     (defun git-log-file ()
-       (interactive)
-       (shell-command (format "git log %s" buffer-file-name) "*git-log*"))
-     (define-key egg-file-cmd-map "l" 'git-log-file))
+;;; magit.el
+;;;
+;;; install:
+;;;  (ubuntu) synaptic -> magit
+;;;
+;;; usage:
+;;;  M-x magit-status
+;;;  n/p     : up/down
+;;;  TAB     : expand
+;;;  s       : stage
+;;;  c       : write commit message
+;;;  C-c C-c : commit
+(req magit nil)
 
 ;;; uniquify.el
 (req uniquify nil
