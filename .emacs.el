@@ -52,7 +52,7 @@
 ;;; ------------------------------------------------------------------
 
 ;; private ?
-(setq emacs-private-p darwin-p)
+(setq emacs-private-p (or darwin-p linux-p))
 
 ;; load-path
 (add-to-list 'load-path "~/.emacs.d/")
