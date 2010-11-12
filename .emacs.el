@@ -795,6 +795,14 @@
 ;;; Edit
 ;;; ------------------------------------------------------------------
 
+;;; sudo-ext.el
+;;;
+;;; M-x sudoedit
+;;; (type password)
+;;; (edit,save)
+;;; C-x #
+(req sudo-ext "http://www.emacswiki.org/emacs/download/sudo-ext.el")
+
 ;;; zencoding-mode.el --- Unfold CSS-selector-like expressions to markup
 (req zencoding-mode "http://github.com/chrisdone/zencoding/raw/master/zencoding-mode.el"
   (add-hook 'sgml-mode-hook 'zencoding-mode) ;; Auto-start on any markup modes
