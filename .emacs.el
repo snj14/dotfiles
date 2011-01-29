@@ -772,6 +772,13 @@
 ;;; Window
 ;;; ------------------------------------------------------------------
 
+;;; popwin
+(req popwin "https://github.com/m2ym/popwin-el/raw/master/popwin.el"
+  (setq display-buffer-function 'popwin:display-buffer)
+  (add-to-list 'popwin:special-display-config '("*Messages*"))
+  (add-to-list 'popwin:special-display-config '("*Backtrace*" :noselect t))
+  )
+
 ;;; e2wm
 (lazyload (e2wm:start-management) "e2wm" "e2wm")
 (setq e2wm:c-code-recipe
