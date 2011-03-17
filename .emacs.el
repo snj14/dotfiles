@@ -942,11 +942,11 @@
 
 ;;; smartchr.el
 (req smartchr "http://github.com/imakado/emacs-smartchr/raw/master/smartchr.el"
-  (global-set-key (kbd "=")  (smartchr '("=" " = " " == " " === ")))
-  (global-set-key (kbd "'")  (smartchr '("'" "'`!!''" "``!!''")))
-  (global-set-key (kbd "\"") (smartchr '("\"" "\"`!!'\"")))
-  (global-set-key (kbd "{")  (smartchr '("{" "{ `!!' }" "{ \"`!!'\" }")))
-  (global-set-key (kbd "(")  (smartchr '("(" "(`!!')")))
+  (global-set-key (kbd "=")  (smartchr '(" = " "=")))
+  (global-set-key (kbd "'")  (smartchr '("'`!!''" "'")))
+  (global-set-key (kbd "\"") (smartchr '("\"`!!'\"" "\"")))
+  (global-set-key (kbd "{")  (smartchr '("{ `!!' }" "{")))
+  (global-set-key (kbd "(")  (smartchr '("(`!!')" "(")))
 
   (define-key emacs-lisp-mode-map (kbd ";") (smartchr '("; " ";; " ";;; ")))
   (define-key lisp-interaction-mode-map (kbd ";") (smartchr '("; " ";; " ";;; "))))
