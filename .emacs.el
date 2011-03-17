@@ -819,8 +819,10 @@
   (add-hook 'html-mode-hook 'zencoding-mode))
 
 ;;; auto-complete.el
+;;; auto-complete-config.el
 (req popup "http://github.com/m2ym/auto-complete/raw/master/popup.el"
 (req auto-complete "http://github.com/m2ym/auto-complete/raw/master/auto-complete.el"
+  (req auto-complete-config "http://github.com/m2ym/auto-complete/raw/master/auto-complete-config.el")
   (setq ac-auto-start 3)
   (global-auto-complete-mode t)
   (define-key ac-complete-mode-map (kbd "C-m") 'ac-complete)
