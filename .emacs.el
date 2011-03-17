@@ -780,6 +780,7 @@
   (setq display-buffer-function 'popwin:display-buffer)
   (add-to-list 'popwin:special-display-config '("*Messages*"))
   (add-to-list 'popwin:special-display-config '("*Backtrace*" :noselect t))
+  (add-to-list 'popwin:special-display-config '("*Warnings*" :noselect t))
   )
 
 ;;; e2wm
