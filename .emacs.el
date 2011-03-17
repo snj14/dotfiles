@@ -1,4 +1,4 @@
-;; last updated : 2010-10-29
+;; last updated : 2011-03-18
 
 ;;; ------------------------------------------------------------------
 ;;; function
@@ -380,6 +380,9 @@
 
   ;; anything-config.el
   (require 'anything-config nil t)
+  ;; color
+  (set-face-background 'anything-isearch-match "red4")
+  (set-face-foreground 'anything-file-name "grey")
 
   ;; anything-match-plugin.el
   (require 'anything-match-plugin nil t)
@@ -402,7 +405,7 @@
   (setq anything-sources
         (list anything-c-source-buffers+
               anything-c-source-ffap-guesser
-              anything-c-source-files-in-current-dir
+              anything-c-source-files-in-current-dir+
               anything-c-source-file-name-history
               anything-c-source-locate
               anything-c-source-emacs-commands))
