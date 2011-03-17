@@ -1051,6 +1051,7 @@
      )
 
 ;;; session.el
+;;; http://sourceforge.net/projects/emacs-session/files/session/
 (req session nil
      (setq session-save-file (expand-file-name "~/.emacs.d/.session"))
      (add-hook 'after-init-hook 'session-initialize))
