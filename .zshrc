@@ -226,7 +226,22 @@ bindkey '^o^_' reverse-menu-complete
 # ------------------------------------------------------------------------------
 # ls after change directory
 # ------------------------------------------------------------------------------
-chpwd () { echo '\e[1;32m'`pwd`'\e[1;m' && l -A }
+typeset -ga chpwd_functions
+
+function _toriaezu_ls() {
+ls -v -F --color=auto
+}
+chpwd_functions+=_toriaezu_ls
+
+
+function _change_rprompt {
+if [ $PWD = $HOME ]; then
+  RPROMPT="[%T]"
+else
+  RPROMPT="%{$fg_bold[white]%}[%{$reset_color%}%{$fg[cyan]%}%60<..<%~%{$reset_color%}%{$fg_bold[white]%}]%{$reset_color%}"
+fi
+}
+chpwd_functions+=_change_rprompt
 
 # ------------------------------------------------------------------------------
 # reload .zshrc
