@@ -1237,9 +1237,6 @@
 ;; refe.el
 ;; (require 'refe nil t)
 
-;; ;; psvn.el
-;; (require 'psvn)
-
 ;; isearch.el
 (setq isearch-lazy-highlight-initial-delay 0)
 
