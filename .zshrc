@@ -244,6 +244,16 @@ fi
 chpwd_functions+=_change_rprompt
 
 # ------------------------------------------------------------------------------
+# for nave
+# ------------------------------------------------------------------------------
+function _naverc_check() {
+if [[ -f '.naverc' ]] ; then
+  source '.naverc'
+fi
+}
+
+chpwd_functions+=_naverc_check
+
 # reload .zshrc
 # ------------------------------------------------------------------------------
 function reload () {
