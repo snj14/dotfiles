@@ -200,6 +200,7 @@ alias -g AE='|& awk'
 
 alias -s txt=emacs
 alias -s emacs=emacs
+alias e='emacsclient --no-wait'
 
 # ssh
 # alias ssh1='ssh -t user@host "auto exec command"'
