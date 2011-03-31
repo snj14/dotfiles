@@ -845,6 +845,10 @@
   (define-key ac-complete-mode-map (kbd "C-m") 'ac-complete)
   (define-key ac-complete-mode-map (kbd "C-n") 'ac-next)
   (define-key ac-complete-mode-map (kbd "C-p") 'ac-previous)
+  (add-hook 'auto-complete-mode-hook
+            (lambda ()
+              (add-to-list 'ac-sources 'ac-source-yasnippet)
+              ))
   ))
 
 ;;; rect-mark.el
