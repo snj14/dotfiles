@@ -931,6 +931,7 @@
                         (candidates . (string-rectangle
                                        delete-rectangle
                                        iedit-mode
+                                       narrow-to-region
                                        ))
                         (action     . call-interactively))
                        ((name       . "Converting")
