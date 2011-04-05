@@ -1070,6 +1070,7 @@
 ;;;  c       : write commit message
 ;;;  C-c C-c : commit
 (req magit nil)
+(global-set-key (kbd "C-c g") 'magit-status)
 
 ;;; uniquify.el
 (req uniquify nil
