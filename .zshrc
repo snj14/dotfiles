@@ -6,9 +6,10 @@
 export LANG=ja_JP.UTF-8
 export PATH=${HOME}/bin:/opt/local/bin:/usr/local/bin:/var/lib/gems/1.9.1/bin/:${PATH}
 export GISTY_DIR="$HOME/dev/gists"
-fpath=(~/.zsh/functions ${fpath})
+export PATH=${PATH}:${HOME}/android/android-sdk-linux_86/tools
+fpath=(${HOME}/.zsh/functions ${fpath})
 
-source .zsh/plugin/incr*.zsh
+source ${HOME}/.zsh/plugin/incr*.zsh
 
 # $PAGER
 if [ `which lv > /dev/null` ]; then
