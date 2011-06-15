@@ -4,6 +4,7 @@
 // 特殊キー, キーバインド定義, フック, ブラックリスト以外のコードは, この中に書くようにして下さい
 //{{%PRESERVE%
 
+prompt.displayDelayTime    = 100;
 // ==================== prefix ==================== //
 // エディットモードで C-z を入力すると, ビューモードのキーバインドが使える
 // key.keyMapHolder[key.modes.EDIT]["C-z"] = key.keyMapHolder[key.modes.VIEW];
