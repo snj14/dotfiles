@@ -296,6 +296,11 @@ function reload () {
 # ------------------------------------------------------------------------------
 
 extract () {
+  file $1 | grep "HTML document text"
+  if [ $? -eq 0 ] ; then
+      echo "$1 is not archive file but HTML file!"
+      return 1
+  fi
   if [ -f $1 ] ; then
       case $1 in
           *.tar.bz2)   tar xvjf $1    ;;
