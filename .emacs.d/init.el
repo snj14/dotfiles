@@ -1,4 +1,27 @@
-;; last updated : 2011-03-18
+;; last updated : 2011-09-24
+(defconst my-time-zero (current-time))
+(defvar my-time-list nil)
+
+(defun my-time-lag-calc (lag label)
+  (if (assoc label my-time-list)
+      (setcdr (assoc label my-time-list)
+              (- lag (cdr (assoc label my-time-list))))
+    (setq my-time-list (cons (cons label lag) my-time-list))))
+
+(defun my-time-lag (label)
+  (let* ((now (current-time))
+         (min (- (car now) (car my-time-zero)))
+         (sec (- (car (cdr now)) (car (cdr my-time-zero))))
+         (msec (/ (- (car (cdr (cdr now)))
+                     (car (cdr (cdr my-time-zero))))
+                  1000))
+         (lag (+ (* 60000 min) (* 1000 sec) msec)))
+    (my-time-lag-calc lag label)))
+
+(defun my-time-lag-print ()
+  (message (prin1-to-string
+            (sort my-time-list
+                  (lambda  (x y)  (> (cdr x) (cdr y)))))))
 
 ;;; ------------------------------------------------------------------
 ;;; function
@@ -12,8 +35,11 @@
 
 (defmacro req (lib src &rest body)
   `(cond ((locate-library ,(symbol-name lib))
+          (my-time-lag ,(symbol-name lib))
           (require ',lib nil t)
-          ,@body)
+          ,@body
+          (my-time-lag ,(symbol-name lib))
+          )
          ((not ,src)
           (message (format "library not found : %S" (symbol-name ',lib))))
          ((string-match "^http" ,src)
@@ -118,9 +144,11 @@
   (when window-system
     (add-hook 'after-init-hook 'server-start)
     (setq x-select-enable-clipboard t))
-  (load-library "color-theme-my")
-  (my-color-theme)
-  ;; (color-theme-arjen)
+   (setq color-theme-libraries "~/.emacs.d")
+  (load-library "color-theme-library")
+  (color-theme-arjen)
+
+;;   (my-color-theme)
   )
 
 ;;; ------------------------------------------------------------------
@@ -150,17 +178,20 @@
 	;; (setq my-font-height 105)
 	;; (setq my-font-height 120)
 	;; (setq my-font-height 150)
-	(setq my-font-height 170)
+	(setq my-font-height 180)
 	;;(setq my-font "Monospace")
 	;;(setq my-font "Inconsolata")
-	(setq my-font "Takaoゴシック")
-               (setq my-font-ja "Takaoゴシック")
+        (setq my-font "ricty")
+;;         (setq my-font-ja "ricty")
+
+	;; (setq my-font "Takaoゴシック")
+        ;; (setq my-font-ja "Takaoゴシック")
 	;;(setq my-font-ja "VL ゴシック")
 	;;(setq my-font-ja "Takaoゴシック")
 	;; (setq my-font-ja "IPAゴシック")
 
-	(setq face-font-rescale-alist
-	      '(("-cdac$" . 1.3)))
+	;; (setq face-font-rescale-alist
+	;;       '(("-cdac$" . 1.3)))
 
 	;; VMware 上のX11では、800x600 のとき 96 dpi になるように調節されている。
 	;; なので、別のサイズやフルスクリーンにすると、dpi の値が変化する。
@@ -228,7 +259,7 @@
       ;; デフォルトフォント設定
       (when my-font
 	(set-face-attribute 'default nil :family my-font :height my-font-height)
-	;;(set-frame-font (format "%s-%d" my-font (/ my-font-height 10)))
+	(set-frame-font (format "%s-%d" my-font (/ my-font-height 10)))
 	)
 
       ;; 日本語文字に別のフォントを指定
@@ -380,6 +411,7 @@
 
   ;; anything-config.el
   (require 'anything-config nil t)
+
   ;; color
   (set-face-background 'anything-isearch-match "red4")
   (set-face-foreground 'anything-file-name "grey")
@@ -559,6 +591,124 @@
 ;;; Major Mode
 ;;; ------------------------------------------------------------------
 
+
+;; ;;; html-helper-mode.el
+
+;; (autoload 'html-helper-mode "html-helper-mode" "Yay HTML" t)
+;; (setq auto-mode-alist (cons '("\\.html$" . html-helper-mode) auto-mode-alist))
+
+;; (defgroup html-helper nil
+;;   "Customizing html-helper-mode"
+;;   :group 'languages
+;;   :group 'hypermedia
+;;   :group 'local)
+
+;; (defgroup html-helper-faces nil
+;;   "Customizing html-helper-mode custom faces"
+;;   :group 'html-helper
+;;   :group 'faces)
+
+;; ;; Default distribution doesn't include visual-basic-mode
+;; (defcustom html-helper-mode-uses-visual-basic nil
+;;   "Non nil to require visual-basic-mode"
+;;   :type 'boolean
+;;   :initialize 'custom-initialize-default
+;;   :group 'html-helper
+;;   :require 'html-helper-mode)
+
+;; (defcustom html-helper-mode-uses-JDE nil
+;;   "No nil to use jde instead of java-mode"
+;;   :type 'boolean
+;;   :initialize 'custom-initialize-default
+;;   :group 'html-helper
+;;   :require 'html-helper-mode)
+
+;; (defcustom html-helper-mode-uses-bold-italic nil
+;;   "Non nil to use the bold-italic font (if your font supports it)"
+;;   :type 'boolean
+;;   :initialize 'custom-initialize-default
+;;   :group 'html-helper
+;;   :require 'html-helper-mode)
+
+;; (defcustom html-helper-mode-uses-KG-style nil
+;;   "Non nil to make Emacs consider PHP/ASP code blocks beginning in 
+;; the first column"
+;;   :type 'boolean
+;;   :initialize 'custom-initialize-default
+;;   :group 'html-helper
+;;   :require 'html-helper-mode)
+
+;; (defcustom html-helper-mode-global-JSP-not-ASP t
+;;   "Non nil to make Emacs consider <% %> blocks as JSP (global default behaviour)"
+;;   :type 'boolean
+;;   :initialize 'custom-initialize-default
+;;   :group 'html-helper
+;;   :require 'html-helper-mode)
+
+;; (progn
+;;   (defvar html-tag-face
+;;     (defface html-tag-face
+;;       '((((class color)
+;; 	  (background dark))
+;; 	 (:foreground "deep red" :bold t))
+;; 	(((class color)
+;; 	  (background light))
+;; 	 (:foreground "red" :bold t))
+;; 	(t
+;; 	 (:foreground "deep red" :bold t)))
+;;       "Face to use for HTML tags."
+;;       :group 'html-helper-faces))
+;;   (defvar html-helper-bold-face 
+;;     (defface html-helper-bold-face
+;;       '((((class color)
+;; 	  (background dark))
+;; 	 (:foreground "wheat" :bold t))
+;; 	(((class color)
+;; 	  (background light))
+;; 	 (:foreground "peru" :bold t))
+;; 	(t
+;; 	 (:foreground "peru" :bold t)))
+;;       "Custom bold face."
+;;       :group 'html-helper-faces))
+;;   (defvar html-helper-italic-face 
+;;     (defface html-helper-italic-face
+;;       '((((class color)
+;; 	  (background dark))
+;; 	 (:foreground "spring green" :italic t))
+;; 	(((class color)
+;; 	  (background light))
+;; 	 (:foreground "medium sea green" :italic t))
+;; 	(t
+;; 	 (:foreground "medium sea green" :italic t)))
+;;       "Custom italic face."
+;;       :group 'html-helper-faces))
+;;   (cond (html-helper-mode-uses-bold-italic
+;; 	 (defvar html-helper-bold-italic-face 
+;; 	   (defface html-helper-bold-italic-face
+;; 	     '((((class color)
+;; 		 (background dark))
+;; 		(:foreground "peachpuff" :bold t:italic t))
+;; 	       (((class color)
+;; 		 (background light))
+;; 		(:foreground "orange" :bold t :italic t))
+;; 	       (t
+;; 		(:foreground "orange" :bold t :italic t)))
+;; 	     "Custom bold italic face."
+;; 	     :group 'html-helper-faces))))
+;;   (defvar html-helper-underline-face 
+;;     (defface html-helper-underline-face
+;;       '((((class color)
+;; 	  (background dark))
+;; 	 (:foreground "cornsilk" :underline t))
+;; 	(((class color)
+;; 	  (background light))
+;; 	 (:foreground "goldenrod" :underline t))
+;; 	(t
+;; 	 (:foreground "goldenrod" :underline t)))
+;;       "Custom underline face."
+;;       :group 'html-helper-faces)))
+
+
 ;;; markdown-mode.el
 (autoload 'markdown-mode "markdown-mode.el"
   "Major mode for editing Markdown files" t)
@@ -583,8 +733,9 @@
 (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
 
 
-;; js2.el
-(lazyload (js2-mode) "js2" "http://js2-mode.googlecode.com/files/js2-20090723b.el"
+;; js2-mode.el
+;; (lazyload (js2-mode) "js2" "http://js2-mode.googlecode.com/files/js2-20090723b.el")
+(lazyload (js2-mode) "js2-mode" "https://github.com/mooz/js2-mode/raw/master/js2-mode.el"
   (setq js2-cleanup-whitespace nil
         js2-mirror-mode nil ; don't auto complete close paren
         ;;                    js2-bounce-indent-flag nil
@@ -595,96 +746,111 @@
         ;;      js2-auto-indent-flag nil    ; dont indent by { } ( ) [ ] : ; , *
         js2-rebind-eol-bol-keys nil ; dont rebind C-a C-e
         js2-highlight-level 3
-        ))
+        js2-use-ast-for-indentation-p t
+        js2-indent-on-enter-key t ;;  retでインデントも
+        js2-enter-indents-newline t
+        )
+  )
 (add-to-list 'auto-mode-alist '("\\.js$" . js2-mode))
 
 (add-hook 'js2-mode-hook
           '(lambda ()
              (define-key js2-mode-map (kbd "M-C-h") nil)
+             (setq js2-cleanup-whitespace nil
+                   js2-mirror-mode nil ; don't auto complete close paren
+                   ;;                    js2-bounce-indent-flag nil
+                   tab-width 4          ; tab
+                   js2-basic-offset 4   ; indent
+                   js2-strict-missing-semi-warning nil ; missing ; is not warning
+                   js2-mode-show-strict-warnings nil
+                   ;;      js2-auto-indent-flag nil    ; dont indent by { } ( ) [ ] : ; , *
+                   js2-rebind-eol-bol-keys nil ; dont rebind C-a C-e
+                   js2-highlight-level 3
+                   )
              ))
-;;; espresso
-(lazyload (espresso-mode) "espresso" "http://download.savannah.gnu.org/releases-noredirect/espresso/espresso.el")
+;; ;;; espresso
+;; (lazyload (espresso-mode) "espresso" "http://download.savannah.gnu.org/releases-noredirect/espresso/espresso.el")
 
-(defun my-js2-indent-function ()
-  (interactive)
-  (save-restriction
-    (widen)
-    (let* ((inhibit-point-motion-hooks t)
-           (parse-status (save-excursion (syntax-ppss (point-at-bol))))
-           (offset (- (current-column) (current-indentation)))
-           (indentation (espresso--proper-indentation parse-status))
-           node)
+;; (defun my-js2-indent-function ()
+;;   (interactive)
+;;   (save-restriction
+;;     (widen)
+;;     (let* ((inhibit-point-motion-hooks t)
+;;            (parse-status (save-excursion (syntax-ppss (point-at-bol))))
+;;            (offset (- (current-column) (current-indentation)))
+;;            (indentation (espresso--proper-indentation parse-status))
+;;            node)
 
-      (save-excursion
+;;       (save-excursion
 
-        ;; I like to indent case and labels to half of the tab width
-        (back-to-indentation)
-        (if (looking-at "case\\s-")
-            (setq indentation (+ indentation (/ espresso-indent-level 2))))
+;;         ;; I like to indent case and labels to half of the tab width
+;;         (back-to-indentation)
+;;         (if (looking-at "case\\s-")
+;;             (setq indentation (+ indentation (/ espresso-indent-level 2))))
 
-        ;; consecutive declarations in a var statement are nice if
-        ;; properly aligned, i.e:
-        ;;
-        ;; var foo = "bar",
-        ;;     bar = "foo";
-        (setq node (js2-node-at-point))
-        (when (and node
-                   (= js2-NAME (js2-node-type node))
-                   (= js2-VAR (js2-node-type (js2-node-parent node))))
-          (setq indentation (+ 4 indentation))))
+;;         ;; consecutive declarations in a var statement are nice if
+;;         ;; properly aligned, i.e:
+;;         ;;
+;;         ;; var foo = "bar",
+;;         ;;     bar = "foo";
+;;         (setq node (js2-node-at-point))
+;;         (when (and node
+;;                    (= js2-NAME (js2-node-type node))
+;;                    (= js2-VAR (js2-node-type (js2-node-parent node))))
+;;           (setq indentation (+ 4 indentation))))
 
-      (indent-line-to indentation)
-      (when (> offset 0) (forward-char offset)))))
+;;       (indent-line-to indentation)
+;;       (when (> offset 0) (forward-char offset)))))
 
-(defun my-indent-sexp ()
-  (interactive)
-  (save-restriction
-    (save-excursion
-      (widen)
-      (let* ((inhibit-point-motion-hooks t)
-             (parse-status (syntax-ppss (point)))
-             (beg (nth 1 parse-status))
-             (end-marker (make-marker))
-             (end (progn (goto-char beg) (forward-list) (point)))
-             (ovl (make-overlay beg end)))
-        (set-marker end-marker end)
-        (overlay-put ovl 'face 'highlight)
-        (goto-char beg)
-        (while (< (point) (marker-position end-marker))
-          ;; don't reindent blank lines so we don't set the "buffer
-          ;; modified" property for nothing
-          (beginning-of-line)
-          (unless (looking-at "\\s-*$")
-            (indent-according-to-mode))
-          (forward-line))
-        (run-with-timer 0.5 nil '(lambda(ovl)
-                                   (delete-overlay ovl)) ovl)))))
+;; (defun my-indent-sexp ()
+;;   (interactive)
+;;   (save-restriction
+;;     (save-excursion
+;;       (widen)
+;;       (let* ((inhibit-point-motion-hooks t)
+;;              (parse-status (syntax-ppss (point)))
+;;              (beg (nth 1 parse-status))
+;;              (end-marker (make-marker))
+;;              (end (progn (goto-char beg) (forward-list) (point)))
+;;              (ovl (make-overlay beg end)))
+;;         (set-marker end-marker end)
+;;         (overlay-put ovl 'face 'highlight)
+;;         (goto-char beg)
+;;         (while (< (point) (marker-position end-marker))
+;;           ;; don't reindent blank lines so we don't set the "buffer
+;;           ;; modified" property for nothing
+;;           (beginning-of-line)
+;;           (unless (looking-at "\\s-*$")
+;;             (indent-according-to-mode))
+;;           (forward-line))
+;;         (run-with-timer 0.5 nil '(lambda(ovl)
+;;                                    (delete-overlay ovl)) ovl)))))
 
-(defun my-js2-mode-hook ()
-  (require 'espresso)
-  (setq espresso-indent-level 4
-        indent-tabs-mode nil
-        c-basic-offset 4)
-  (c-toggle-auto-state 0)
-  (c-toggle-hungry-state 1)
-  (set (make-local-variable 'indent-line-function) 'my-js2-indent-function)
-  ; (define-key js2-mode-map [(meta control |)] 'cperl-lineup)
-  (define-key js2-mode-map "\C-\M-\\"
-    '(lambda()
-       (interactive)
-       (insert "/* -----[ ")
-       (save-excursion
-         (insert " ]----- */"))
-       ))
-  (define-key js2-mode-map "\C-m" 'newline-and-indent)
-  ; (define-key js2-mode-map [(backspace)] 'c-electric-backspace)
-  ; (define-key js2-mode-map [(control d)] 'c-electric-delete-forward)
-  (define-key js2-mode-map "\C-\M-q" 'my-indent-sexp)
-  (if (featurep 'js2-highlight-vars)
-      (js2-highlight-vars-mode))
-  (message "My JS2 hook"))
+;; (defun my-js2-mode-hook ()
+;;   (require 'espresso)
+;;   (setq espresso-indent-level 4
+;;         indent-tabs-mode nil
+;;         c-basic-offset 4)
+;;   (c-toggle-auto-state 0)
+;;   (c-toggle-hungry-state 1)
+;;   (set (make-local-variable 'indent-line-function) 'my-js2-indent-function)
+;;   ; (define-key js2-mode-map [(meta control |)] 'cperl-lineup)
+;;   (define-key js2-mode-map "\C-\M-\\"
+;;     '(lambda()
+;;        (interactive)
+;;        (insert "/* -----[ ")
+;;        (save-excursion
+;;          (insert " ]----- */"))
+;;        ))
+;;   (define-key js2-mode-map "\C-m" 'newline-and-indent)
+;;   ; (define-key js2-mode-map [(backspace)] 'c-electric-backspace)
+;;   ; (define-key js2-mode-map [(control d)] 'c-electric-delete-forward)
+;;   (define-key js2-mode-map "\C-\M-q" 'my-indent-sexp)
+;;   (if (featurep 'js2-highlight-vars)
+;;       (js2-highlight-vars-mode))
+;;   (message "My JS2 hook"))
 
-(add-hook 'js2-mode-hook 'my-js2-mode-hook)
+;; (add-hook 'js2-mode-hook 'my-js2-mode-hook)
 
 ;; ruby-mode.el
 (lazyload (run-ruby inf-ruby-keys) "inf-ruby" nil)
@@ -783,7 +949,11 @@
   (add-to-list 'popwin:special-display-config '("*Warnings*" :noselect t))
   )
 
+
+
 ;;; e2wm.el
+;; (auto-install-from-url "http://github.com/kiwanami/emacs-window-layout/raw/master/window-layout.el")
+;; (auto-install-from-url "http://github.com/kiwanami/emacs-window-manager/raw/master/e2wm.el")
 (lazyload (e2wm:start-management) "e2wm" "e2wm"
   (setq e2wm:c-code-recipe
         '(| (:left-size-ratio 0.2)
@@ -810,10 +980,18 @@
      ("prefix L" . ielm)
      ("M-m" . e2wm:pst-window-select-main-command)
      ) e2wm:prefix-key)
+
+  ;; ;; magit
+  ;; (require 'e2wm-vcs)
+  ;; (e2wm:add-keymap
+  ;;  e2wm:pst-minor-mode-keymap
+  ;;  '(("M-w" . e2wm:dp-magit))
+  ;;  e2wm:prefix-key)
 )
 
+; (auto-install-from-url "https://github.com/kiwanami/emacs-window-manager/raw/master/e2wm-vcs.el")
 
-(global-set-key (kbd "M-+") 'e2wm:start-management)
+(global-set-key (kbd "C-c e") 'e2wm:start-management)
 
 ;; windmove.el
 ;; shift + <cursor>
@@ -836,6 +1014,28 @@
   (add-hook 'sgml-mode-hook 'zencoding-mode) ;; Auto-start on any markup modes
   (add-hook 'html-mode-hook 'zencoding-mode))
 
+;;; yasnippet.el
+(when (require 'yasnippet nil t)
+  (yas/initialize)
+  (yas/load-directory (expand-file-name "~/.emacs.d/snippets"))
+  (define-key yas/keymap (kbd "C-n") 'yas/next-field)
+  (define-key yas/keymap (kbd "C-p") 'yas/prev-field)
+; やりたいのはyas/skip-and-clear-or-backward-delete-charだった・・・
+;   (define-key yas/keymap (kbd "C-h") 'yas/skip-and-clear-or-delete-char)
+
+  ;; ;;; anything-c-yasnippet.el
+  ;; ;;; http://svn.coderepos.org/share/lang/elisp/anything-c-yasnippet/anything-c-yasnippet.el
+  ;; (require 'anything-c-yasnippet)
+  ;; (setq anything-c-yas-space-match-any-greedy t)
+  ;; (global-set-key (kbd "M-i") 'anything-c-yas-complete)
+  ;; ; (add-to-list 'yas/extra-mode-hooks 'ruby-mode-hook)
+  ;; (setq ac-sources
+  ;;       '(ac-source-yasnippet ac-source-words-in-buffer))
+  ;; ;; yasnippet for js2-mode
+  ;; ; (add-to-list 'yas/extra-mode-hooks
+  ;; ;              'js2-mode-hook)
+  )
+
 ;;; auto-complete.el
 ;;; auto-complete-config.el
 (req popup "http://github.com/m2ym/auto-complete/raw/master/popup.el"
@@ -854,24 +1054,24 @@
   ))
 
 ;;; rect-mark.el
-(req rect-mark nil
-  (define-key ctl-x-map "r\C-@" 'rm-set-mark)
-  (define-key ctl-x-map [?r ?\C-\ ] 'rm-set-mark)
-  (define-key ctl-x-map "r\C-x" 'rm-exchange-point-and-mark)
-  (define-key ctl-x-map "r\C-w" 'rm-kill-region)
-  (define-key ctl-x-map "r\M-w" 'rm-kill-ring-save)
-  (define-key global-map [S-down-mouse-1] 'rm-mouse-drag-region)
-  (defun set-normal-or-rectangel-mark-command ()
-    (interactive)
-    (cond ((not mark-active)
-           (call-interactively 'set-mark-command))
-          ((not rm-mark-active)
-           (rm-activate-mark)
-           (message "Rectangle mark set"))
-          (t
-           (rm-deactivate-mark)
-           (set-mark-command nil))))
-  (global-set-key (kbd "C-SPC") 'set-normal-or-rectangel-mark-command))
+;; (req rect-mark nil
+;;   (define-key ctl-x-map "r\C-@" 'rm-set-mark)
+;;   (define-key ctl-x-map [?r ?\C-\ ] 'rm-set-mark)
+;;   (define-key ctl-x-map "r\C-x" 'rm-exchange-point-and-mark)
+;;   (define-key ctl-x-map "r\C-w" 'rm-kill-region)
+;;   (define-key ctl-x-map "r\M-w" 'rm-kill-ring-save)
+;;   (define-key global-map [S-down-mouse-1] 'rm-mouse-drag-region)
+;;   (defun set-normal-or-rectangel-mark-command ()
+;;     (interactive)
+;;     (cond ((not mark-active)
+;;            (call-interactively 'set-mark-command))
+;;           ((not rm-mark-active)
+;;            (rm-activate-mark)
+;;            (message "Rectangle mark set"))
+;;           (t
+;;            (rm-deactivate-mark)
+;;            (set-mark-command nil))))
+;;   (global-set-key (kbd "C-SPC") 'set-normal-or-rectangel-mark-command))
 
 ;;; mic-paren.el
 (req mic-paren nil
@@ -968,7 +1168,7 @@
 
 ;;; smartchr.el
 (req smartchr "http://github.com/imakado/emacs-smartchr/raw/master/smartchr.el"
-  (global-set-key (kbd "=")  (smartchr '(" = " "=")))
+  (global-set-key (kbd "=")  (smartchr '("=" "==" "===" " = " " == " " === ")))
   (global-set-key (kbd "'")  (smartchr '("'`!!''" "'")))
   (global-set-key (kbd "\"") (smartchr '("\"`!!'\"" "\"")))
   (global-set-key (kbd "{")  (smartchr '("{ `!!' }" "{")))
@@ -1015,26 +1215,6 @@
         (overlay-put ol 'face 'highlight)
         (sit-for 0.5)
         (delete-overlay ol)))))
-
-;;; yasnippet.el
-(when (require 'yasnippet nil t)
-  (yas/initialize)
-  (yas/load-directory "~/.emacs.d/snippets")
-  (define-key yas/keymap (kbd "C-n") 'yas/next-field)
-  (define-key yas/keymap (kbd "C-p") 'yas/prev-field)
-
-  ;;; anything-c-yasnippet.el
-  ;;; http://svn.coderepos.org/share/lang/elisp/anything-c-yasnippet/anything-c-yasnippet.el
-  (require 'anything-c-yasnippet)
-  (setq anything-c-yas-space-match-any-greedy t)
-  (global-set-key (kbd "M-i") 'anything-c-yas-complete)
-  ; (add-to-list 'yas/extra-mode-hooks 'ruby-mode-hook)
-  (setq ac-sources
-        '(ac-source-yasnippet ac-source-words-in-buffer))
-  ;; yasnippet for js2-mode
-  ; (add-to-list 'yas/extra-mode-hooks
-  ;              'js2-mode-hook)
-  )
 
 ;;; time-stamp.el
 (lazyload (time-stamp) "time-stamp" nil
@@ -1180,7 +1360,7 @@
 (when linux-p
   (setq migemo-command "cmigemo")
   (setq migemo-options '("-q" "--emacs"))
-  (setq migemo-dictionary "/usr/local/share/migemo/utf-8/migemo-dict")
+  (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict")
   (setq migemo-user-dictionary nil)
   (setq migemo-regex-dictionary nil)
   (setq migemo-coding-system 'utf-8-unix)
@@ -1252,3 +1432,17 @@
 ;;; test
 ;;; ------------------------------------------------------------------
 
+
+(defun my-time-lag ()
+  (let* ((now (current-time))
+         (min (- (car now) (car my-time-zero)))
+         (sec (- (car (cdr now)) (car (cdr my-time-zero))))
+         (msec (/ (- (car (cdr (cdr now)))
+                     (car (cdr (cdr my-time-zero))))
+                     1000))
+         (lag (+ (* 60000 min) (* 1000 sec) msec)))
+    (message "'.emacs.el' loading time: %d msec." lag)))
+
+
+(add-hook 'after-init-hook (lambda () (my-time-lag)) t)
+(add-hook 'after-init-hook (lambda () (my-time-lag-print)) t)
