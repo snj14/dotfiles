@@ -3,3 +3,4 @@
 !.gitignore
 !color-theme.el
 !color-theme-my.el
+!init.el
