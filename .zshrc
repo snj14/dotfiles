@@ -7,7 +7,7 @@ export LANG=ja_JP.UTF-8
 export PATH=${HOME}/bin:/opt/local/bin:/usr/local/bin:/var/lib/gems/1.9.1/bin/:${PATH}
 export GISTY_DIR="$HOME/dev/gists"
 export PATH=${PATH}:${HOME}/android/android-sdk-linux_86/tools
-fpath=(${HOME}/.zsh/functions ${fpath})
+fpath=(${HOME}/.zsh/completion ${fpath})
 
 source ${HOME}/.zsh/plugin/incr*.zsh
 
