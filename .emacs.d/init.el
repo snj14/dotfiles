@@ -1,4 +1,4 @@
-;; last updated : 2011-09-24
+;; last updated : 2011-09-29
 (defconst my-time-zero (current-time))
 (defvar my-time-list nil)
 
@@ -590,6 +590,88 @@
 ;;; ------------------------------------------------------------------
 ;;; Major Mode
 ;;; ------------------------------------------------------------------
+
+
+;;; coffee-mode.el
+(req coffee-mode nil
+  (add-hook 'coffee-mode-hook '(lambda ()
+                                 (require 'vline)
+                                 (vline-mode 1)
+                                 (custom-set-faces
+                                  '(vline ((t (:background "gray13")))))
+                                 ))
+  (setenv "PATH" (concat (expand-file-name "~/.nave/installed/0.4.12/bin")
+                         ":"
+                         (getenv "PATH")))
+  (setq js2coffee-command "~/.nave/installed/0.4.12/bin/js2coffee"
+        coffee-command "~/.nave/installed/0.4.12/bin/coffee"
+        coffee-tab-width 2)
+  (defun coffee-compile-replace-region (start end)
+    "Compiles a region and displays the JS in another buffer."
+    (interactive "r")
+    ;;  fix ->
+    (when (< (point) (region-end))
+      (exchange-point-and-mark))
+    ;; <- fix
+
+    (let ((buffer (get-buffer coffee-compiled-buffer-name)))
+      (when buffer
+        (kill-buffer buffer)))
+
+    (apply (apply-partially 'call-process-region start end coffee-command nil
+                            (current-buffer)
+                            nil)
+           (append coffee-args-compile (list "-s" "-p")))
+    (delete-region start end)
+    )
+  (defun coffee-js2coffee-replace-region (start end)
+    "Replace JS to coffee in current buffer."
+    (interactive "r")
+
+    ;;  fix ->
+    (when (< (point) (region-end))
+      (exchange-point-and-mark))
+    ;;  <- fix
+
+    (let ((buffer (get-buffer coffee-compiled-buffer-name)))
+      (when buffer
+        (kill-buffer buffer)))
+
+    (call-process-region start end
+                         js2coffee-command nil
+                         (current-buffer)
+                         )
+    (delete-region start end)
+    )
+  (defun coffee-exec-region (start end)
+    "Compiles a region and displays the JS in another buffer."
+    (interactive "r")
+    (when (< (point) (region-end))
+      (exchange-point-and-mark))
+    (let ((buffer (get-buffer coffee-compiled-buffer-name)))
+      (when buffer
+        (kill-buffer buffer)))
+    (apply (apply-partially 'call-process-region start end coffee-command nil
+                            (current-buffer)
+                            nil)
+           (list "-s"))
+    (comment-region end (max (point) (region-end)))
+    (goto-char end)
+    )
+  (defun coffee-exec-buffer ()
+    "Compiles a region and displays the JS in another buffer."
+    (interactive)
+    (goto-char (point-max))
+    (coffee-exec-region (point-min) (point-max))
+    )
+
+
+  (define-key coffee-mode-map (kbd "C-c j") 'coffee-compile-replace-region)
+  (define-key coffee-mode-map (kbd "C-c c") 'coffee-js2coffee-replace-region)
+  (define-key coffee-mode-map (kbd "C-c e") 'coffee-exec-region)
+  (define-key coffee-mode-map (kbd "C-c E") 'coffee-exec-buffer)
+
+  )
 
 
 ;; ;;; html-helper-mode.el
