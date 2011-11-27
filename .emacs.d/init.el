@@ -595,11 +595,9 @@
 ;;; coffee-mode.el
 (req coffee-mode nil
   (add-hook 'coffee-mode-hook '(lambda ()
-                                 (require 'vline)
-                                 (vline-mode 1)
-                                 (custom-set-faces
-                                  '(vline ((t (:background "gray13")))))
-                                 ))
+                                 (when (featurep 'highlight-indentation)
+                                   (highlight-indentation 2)
+                                   (set-face-background 'highlight-indent-face "gray6"))))
   (setenv "PATH" (concat (expand-file-name "~/.nave/installed/0.4.12/bin")
                          ":"
                          (getenv "PATH")))
@@ -1305,6 +1303,10 @@
   (setq time-stamp-format "%04y-%02m-%02d")
   (setq time-stamp-end " \\|$"))
 (add-hook 'before-save-hook 'time-stamp)
+
+;;; highlight-indentation.el
+(req highlight-indentation
+  "https://raw.github.com/antonj/Highlight-Indentation-for-Emacs/master/highlight-indentation.el")
 
 ;;; ------------------------------------------------------------------
 ;;; File
