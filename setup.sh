@@ -15,3 +15,6 @@ do
 
 done
 
+
+ln -is "$PWD/bin" $HOME/
+
