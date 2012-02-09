@@ -1,190 +1,52 @@
-window	EditControl	/:(Edit|TEdit|RichEdit(20[AW])?)$/ :Global
-window	SysListView32	/:SysListView32$/ :Global
-window	SysTreeView32	/:SysTreeView32$/ :Global
-window	ComboBox	/:ComboBox(:Edit)?$/ :Global
-window	InternetExplorer /:Internet Explorer_Server$/ :Global
-
-include ".mayu.d/109.mayu"             # 109 キーボード
-include ".mayu.d/DVORAKon109.mayu"     # Dvorak
-include ".mayu.d/act.mayu"             # ACT
-include ".mayu.d/migemo-isearch.mayu"  # migemo-isearch
+include "linux109.mayu"
+include ".mayu.d/104on109.mayu"
+include ".mayu.d/DVORAKon109.mayu"
 
 keymap Global
- key W-F12 = &LoadSetting &HelpMessage('a','b')			# 設定ファイルの読み込み
- # key S-F11 = &ClipboardCopy($WindowClassName)	#
- 
- # 英数 > Ctrl
- mod Ctrl += 英数				# 英数にCtrl機能をつける
- key *英数 = *RCtrl				# 英数をCtrlに変更
+ # Eisuu
+ mod control += Eisuu
+ key *Eisuu = *LControl
+# # capslock
+# mod control += CapsLock
+# key *CapsLock = *LControl
 
- # Esc と半角/全角の入れ替え
- key *半角/全角	= *Esc
- # key *Esc	= *半角/全角
- 
  # SandS
  mod shift += !!!Space
  key R-*Space = &Ignore
- 
- # 右shiftはMOD9
- mod Shift -= !RShift				# 右Shiftからshift機能を消す
- mod mod9 += !!RightShift
- # 右Shittにランチャを割り当てる (win-space)
- key ~S-*RShift = &SetImeStatus(off) W-Space
- 
- # 左Shiftはwin
-#  mod *LShift		= *LWin
- mod shift -= !!!LShift				# 左ShiftからShift機能を消す
- mod win += LShift
- key *LShift = *LWin
-#  key ~S-*LShift = &SetImeStatus(off) W-Space
- 
- # 右ctrlをFN相当に(デスクトップ用)
- mod Ctrl -= !RCtrl				# 右CtrlからCtrl機能を消す
- mod mod1 += !RCtrl
- key M1-Up = PageUp
- key M1-Down = PageDown
- key M1-Left = Home
- key M1-Right = End
- 
- # 左ctrlはalt
- mod Ctrl  -= LCtrl
- mod Alt   += LCtrl
- key *LCtrl	= *LAlt
- # 左Winもalt
- mod Win  -= LWin
- mod Alt   += LWin
- key *LWin	= *LAlt
- 
- # 無変換/変換をBS/DELに
- key ~S-~C-*無変換 = *BS # 無変換 = BS
- key C-*無変換 = C-BS        # c-BS = kill line (back)
- key ~S-~C-*変換 = *Del  # 変換 = DEL
- 
-#  # S + 無変換/変換をIMEの制御に
- key S-*無変換  = &SetImeStatus(off) # Shift + 無変換 = IMEoff
- key S-*変換    = &SetImeStatus(on)  # Shift + 変換   = IMEon
- #key S-*無変換 = U-Space S-無変換
- 
- #------------------------------------------------
- # ウィンドウ操作
- #------------------------------------------------
- key W-M = &WindowMaximize	# 最大化
- key W-I = &WindowMinimize	# 最小化
- # key W-V = A-Space	# 最小化
- # key W-K = &WindowClose		# 閉じる
- 
- #------------------------------------------------
- # 音量関係
- #------------------------------------------------
- # master:
- #	ボリュームの値を変更します。
- #	指定はパーセンテージ。
- #	+や-があれば相対、無ければ絶対。
- # master_mute:
- #	ミュートの切り替え。
- #	引数が0ならmuteをoff, 1ならmuteをon。
- #	引数が無ければトグル。
- 
- #key W-ESC = &PlugIn("sound_volume", "master", "100", true)
- #key W-_1 = &PlugIn("sound_volume", "master", "75", true)
- #key W-S-_7 = &PlugIn("sound_volume", "master", "50", true)
- #key W-A = &PlugIn("sound_volume", "master", "25", true)
- #key W-Semicolon = &PlugIn("sound_volume", "master", "0", true)
- 
- #------------------------------------------------
- # Launcher
- #------------------------------------------------
- # KEY M9-X = W-A-S-X # &ShellExecute("open", "C:/bin/xyzzy/xyzzycli.exe",,, ShowNormal) # Xyzzy
- #  KEY M9-X =  &ShellExecute("open", "C:/bin/xyzzy/xyzzycli.exe",,"C:/bin/xyzzy/", ShowNormal) # Xyzzy
- #  KEY M9-A =  &ShellExecute("open", "C:/bin/afx/afx.exe","-s",, ShowNormal)    # afx
- key M9-F = W-A-S-F      # firefox
- # KEY W-W = &ShellExecute("open", "C:/bin/cltc/cltc.exe","",, ShowNormal)
- 
- # KEY M9-Enter = W-A-S-B      # BookmarkMode(clnchex)
- # KEY M9-*YenSign = W-A-S-L   # LauncherMode(clnchex)
- # key C-*RShift = W-A-S-G     # GoMode(clnchex)
- # key S-*RShift = W-A-S-F     # FilerMode(clnchex)
- 
- KEY W-K = C-A-S-K       # eClip
- 
- #&ShellExecute(operation, file, parameters, directory, show_command)
 
+###############
+# launcher
+###############
+mod shift -= !!!LShift
+mod mod0 = LShift
 
-# -------------------------------------------------------------------
-# アプリケーション関係
-# -------------------------------------------------------------------
+###############
+# emacs
+###############
+# gconftool-2 --set --type string /apps/metacity/keybinding_commands/command_1 "/usr/bin/wmctrl -a emacs@ || emacs23"
+# gconftool-2 --set --type string /apps/metacity/global_keybindings/run_command_1 "<Shift><Control>F1"
+key M0-E = S-M-F1
 
-## Afx
-window afx /afx\.exe/ : Global
- key C-a = Home
- key C-e = End
- key C-n = Down
- key C-p = Up
- key C-v = PageDown
- key A-v = PageUp
- key C-i = TAB
- Key C-f = Right
- Key C-b = Left
- Key C-m = Return
- key C-Slash = S-C-Left
- Key M-Slash = S-C-Right
- key C-h = BackSpace
- key C-d = Delete
+###############
+# firefox
+###############
+# gconftool-2 --set --type string /apps/metacity/keybinding_commands/command_2 "/usr/bin/wmctrl -a firefox || firefox"
+# gconftool-2 --set --type string /apps/metacity/global_keybindings/run_command_2 "<Shift><Control>F2"
+key M0-B = S-M-F2
 
-## Xyzzy
-window xyzzy /xyzzy\.exe/ : Global
- key R-*LAlt = &Ignore
- key R-*RAlt = &Ignore
+###############
+# terminal
+###############
+# gconftool-2 --set --type string /apps/metacity/keybinding_commands/command_2 "/usr/bin/wmctrl -a Terminal || gnome-terminal"
+# gconftool-2 --set --type string /apps/metacity/global_keybindings/run_command_3 "<Shift><Control>F3"
+key M0-T = S-M-F3
 
-window console /ConsoleWindowClass/ : Global
- key S-*変換    = $ToggleIME
- key S-*無変換  = $ToggleIME
+###############
+# select window
+###############
+# CompizConfig > Scale > Launch WindowPicker > S-C-F12
+# key M0-A = Windows W
 
-# giraffe+
-window giraffe /giraffe/ : Global
- key C-g = Escape
- key C-m = Enter
- key C-b = Left
- key C-f = Right
- key C-n = Down
- key C-p = Up
- key C-h = BackSpace
- key C-d = Delete
- key C-v = PageDown
- key A-v = PageUp
-
-# eClip
-window eClip /eClipMainClass/ : Global
- key C-a = Home
- key C-e = End
- key C-n = Down
- key C-p = Up
- key C-v = PageDown
- key A-v = PageUp
- key C-i = TAB
- Key C-f = Right
- Key C-b = Left
- Key C-m = Return
- key C-Slash = S-C-Left
- Key M-Slash = S-C-Right
- key C-H = BackSpace
- key C-D = Delete
-
-# ダイアログボックス
-window dialog /#32770:Button$/ : Global
- key C-G = Escape
- key C-M = Enter
- key C-B = Left
- key C-F = Right
- key C-N = Down
- key C-P = Up
-
-# ポチエス
-window ExtSel /esExt5/ : Global
- key C-G = Escape
- key C-M = Enter
- key C-B = Left
- key C-F = Right
- key C-N = Down
- key C-P = Up
+# CompizConfig > Enhanced Zoom Desktop > ZoomIn  > Super-F4
+# CompizConfig > Enhanced Zoom Desktop > ZoomOut > Super-F5
 

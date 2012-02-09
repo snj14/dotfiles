@@ -31,24 +31,50 @@ key.suspendKey           = "<f2>";
 
 // ================ Hooks ============================= //
 
-hook.setHook('KeyBoardQuit', function (aEvent) {
+hook.addToHook('KeyBoardQuit', function (aEvent) {
+    if (key.currentKeySequence.length) {
+        return;
+    }
     command.closeFindBar();
-    document.getElementById("Browser:Stop").doCommand();
+    var marked = command.marked(aEvent);
     if (util.isCaretEnabled()) {
-        command.resetMark(aEvent);
+        if (marked) {
+            command.resetMark(aEvent);
+        } else {
+            if ("blur" in aEvent.target) {
+                aEvent.target.blur();
+            }
+            gBrowser.focus();
+            _content.focus();
+        }
     } else {
         goDoCommand("cmd_selectNone");
     }
-    key.generateKey(aEvent.originalTarget, KeyEvent.DOM_VK_ESCAPE, true);
-    // focus on content
-    let elem = document.commandDispatcher.focusedElement;
-    if (elem) elem.blur();
-
-    gBrowser.focus();
-    content.focus();
+    if (KeySnail.windowType === "navigator:browser" && !marked) {
+        key.generateKey(aEvent.originalTarget, KeyEvent.DOM_VK_ESCAPE, true);
+    }
 });
 
+// ============================== Black list =============================== //
+
+hook.addToHook("LocationChange", function (aNsURI) {
+    var URL = aNsURI ? aNsURI.spec : null;
+    key.suspendWhenMatched(URL, key.blackList);
+});
+
+key.blackList = [
+    'http://fastladder.com/'
+];
+
 // ================ Key Bindings ====================== //
+
+key.setGlobalKey('C-;', function (ev, arg) {
+    ext.select(arg, ev);
+}, 'エクステ一覧表示', true);
+
+key.setGlobalKey('M-:', function (ev) {
+    command.interpreter();
+}, 'JavaScript のコードを評価', true);
 
 key.setGlobalKey('C-M-R', function () {
     userscript.reload();
@@ -111,22 +137,6 @@ key.setGlobalKey(['C-x', 'n'], function () {
 key.setGlobalKey(['C-x', 'C-c'], function () {
     goQuitApplication();
 }, 'Firefox を終了');
-
-key.setGlobalKey(['C-x', 'o'], function (aEvent, aArg) {
-    command.focusOtherFrame(aArg);
-}, '次のフレームを選択', true);
-
-key.setGlobalKey(['C-x', 'C-w'], function () {
-    saveDocument(window.content.document);
-}, 'ファイルを保存');
-
-key.setGlobalKey(['C-x', 'C-f'], function () {
-    BrowserOpenFileWindow();
-}, 'ファイルを開く');
-
-key.setGlobalKey(['C-x', '1'], function (aEvent) {
-    window.loadURI(aEvent.target.ownerDocument.location.href);
-}, '現在のフレームだけを表示');
 
 key.setGlobalKey('C-m', function (aEvent) {
     key.generateKey(aEvent.originalTarget, KeyEvent.DOM_VK_RETURN, true);
@@ -202,11 +212,19 @@ key.setViewKey('s', function (aEvent) {
     setStyleDisabled(!getMarkupDocumentViewer().authorStyleDisabled);
 }, 'ToggleStyleSheet');
 
-key.setViewKey('C-n', function (aEvent) {
+key.setViewKey([['C-n'],['j']], function (aEvent) {
+    key.generateKey(aEvent.originalTarget, KeyEvent.DOM_VK_DOWN, true);
+    key.generateKey(aEvent.originalTarget, KeyEvent.DOM_VK_DOWN, true);
+    key.generateKey(aEvent.originalTarget, KeyEvent.DOM_VK_DOWN, true);
+    key.generateKey(aEvent.originalTarget, KeyEvent.DOM_VK_DOWN, true);
     key.generateKey(aEvent.originalTarget, KeyEvent.DOM_VK_DOWN, true);
 }, '一行スクロールダウン');
 
-key.setViewKey('C-p', function (aEvent) {
+key.setViewKey([['C-p'],['k']], function (aEvent) {
+    key.generateKey(aEvent.originalTarget, KeyEvent.DOM_VK_UP, true);
+    key.generateKey(aEvent.originalTarget, KeyEvent.DOM_VK_UP, true);
+    key.generateKey(aEvent.originalTarget, KeyEvent.DOM_VK_UP, true);
+    key.generateKey(aEvent.originalTarget, KeyEvent.DOM_VK_UP, true);
     key.generateKey(aEvent.originalTarget, KeyEvent.DOM_VK_UP, true);
 }, '一行スクロールアップ');
 
@@ -269,14 +287,6 @@ key.setViewKey('l', function () {
 key.setViewKey('h', function () {
     gBrowser.mTabContainer.advanceSelectedTab(-1, true);
 }, 'ひとつ左のタブへ');
-
-key.setViewKey('M-n', function () {
-    command.walkInputElement(command.elementsRetrieverButton, true, true);
-}, '次のボタンへフォーカスを当てる');
-
-key.setViewKey('M-p', function () {
-    command.walkInputElement(command.elementsRetrieverButton, false, true);
-}, '前のボタンへフォーカスを当てる');
 
 key.setViewKey('f', function () {
     command.focusElement(command.elementsRetrieverTextarea, 0);
@@ -549,6 +559,3 @@ key.setCaretKey('H', function () {
     gBrowser.mTabContainer.advanceSelectedTab(-1, true);
 }, 'ひとつ左のタブへ');
 
-key.setViewKey("C-;", function (ev, arg) {
-                   ext.exec("tanything", arg);
-               }, "タブを一覧表示", true);

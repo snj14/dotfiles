@@ -1,27 +1,10 @@
-;; last updated : 2011-09-29
-(defconst my-time-zero (current-time))
-(defvar my-time-list nil)
+;; last updated : 2012-02-10
 
-(defun my-time-lag-calc (lag label)
-  (if (assoc label my-time-list)
-      (setcdr (assoc label my-time-list)
-              (- lag (cdr (assoc label my-time-list))))
-    (setq my-time-list (cons (cons label lag) my-time-list))))
-
-(defun my-time-lag (label)
-  (let* ((now (current-time))
-         (min (- (car now) (car my-time-zero)))
-         (sec (- (car (cdr now)) (car (cdr my-time-zero))))
-         (msec (/ (- (car (cdr (cdr now)))
-                     (car (cdr (cdr my-time-zero))))
-                  1000))
-         (lag (+ (* 60000 min) (* 1000 sec) msec)))
-    (my-time-lag-calc lag label)))
-
-(defun my-time-lag-print ()
-  (message (prin1-to-string
-            (sort my-time-list
-                  (lambda  (x y)  (> (cdr x) (cdr y)))))))
+(add-hook 'after-init-hook
+          (lambda ()
+            (message "init time: %d msec"
+                     (+ (* (- (nth 1 after-init-time) (nth 1 before-init-time)) 1000)
+                        (/ (- (nth 2 after-init-time) (nth 2 before-init-time)) 1000)))))
 
 ;;; ------------------------------------------------------------------
 ;;; function
@@ -35,13 +18,11 @@
 
 (defmacro req (lib src &rest body)
   `(cond ((locate-library ,(symbol-name lib))
-          (my-time-lag ,(symbol-name lib))
           (require ',lib nil t)
           ,@body
-          (my-time-lag ,(symbol-name lib))
           )
          ((not ,src)
-          (message (format "library not found : %S" (symbol-name ',lib))))
+          (message (format "=== library not found : %S" (symbol-name ',lib))))
          ((string-match "^http" ,src)
           (message (format "(auto-install-from-url %S)" ,src)))
          (t
@@ -54,7 +35,7 @@
             '(progn
                ,@body)))
          ((not ,src)
-          (message (format "library not found : %S" ,lib)))
+          (message (format "=== library not found : %S" ,lib)))
          ((string-match "^http" ,src)
           (message (format "(auto-install-from-url %S)" ,src)))
          (t
@@ -367,6 +348,7 @@
 (setq inhibit-startup-message t)
 (menu-bar-mode -1)     ; hide menu bar
 (tool-bar-mode -1)     ; hide tool bar
+(toggle-scroll-bar nil); hide scroll bar
 (line-number-mode 1)   ; show line number   @ mode-line
 (column-number-mode 1) ; show column number @ mode-line
 (show-paren-mode t)    ;
@@ -505,7 +487,7 @@
 
 ;; wdired.el
 (lazyload (wdired-change-to-wdired-mode) "wdired" "http://www.emacswiki.org/cgi-bin/wiki/download/wdired.el")
-(add-hook 'dired-load-hook
+(add-hook 'dired-mode-hook
           '(lambda ()
              (define-key dired-mode-map (kbd "r") 'wdired-change-to-wdired-mode)))
 
@@ -596,13 +578,16 @@
 (req coffee-mode nil
   (add-hook 'coffee-mode-hook '(lambda ()
                                  (when (featurep 'highlight-indentation)
-                                   (highlight-indentation 2)
-                                   (set-face-background 'highlight-indent-face "gray6"))))
-  (setenv "PATH" (concat (expand-file-name "~/.nave/installed/0.4.12/bin")
+                                   ;; (set-face-background 'highlight-indentation-face "midnight blue")
+                                   (set-face-background 'highlight-indentation-face "#111111")
+                                   (highlight-indentation-set-offset 2)
+                                   (highlight-indentation-mode t)
+                                   )))
+  (setenv "PATH" (concat (expand-file-name "~/.nave/installed/0.6.6/bin")
                          ":"
                          (getenv "PATH")))
-  (setq js2coffee-command "~/.nave/installed/0.4.12/bin/js2coffee"
-        coffee-command "~/.nave/installed/0.4.12/bin/coffee"
+  (setq js2coffee-command "~/.nave/installed/0.6.6/bin/js2coffee"
+        coffee-command "~/.nave/installed/0.6.6/bin/coffee"
         coffee-tab-width 2)
   (defun coffee-compile-replace-region (start end)
     "Compiles a region and displays the JS in another buffer."
@@ -663,11 +648,21 @@
     (coffee-exec-region (point-min) (point-max))
     )
 
+  (defun my-toggle-fold ()
+    "Toggle fold all lines larger than indentation on current line"
+    (interactive)
+    (let ((col 1))
+      (save-excursion
+        (back-to-indentation)
+        (setq col (+ 1 (current-column)))
+        (set-selective-display
+         (if selective-display nil (or col 1))))))
 
   (define-key coffee-mode-map (kbd "C-c j") 'coffee-compile-replace-region)
   (define-key coffee-mode-map (kbd "C-c c") 'coffee-js2coffee-replace-region)
   (define-key coffee-mode-map (kbd "C-c e") 'coffee-exec-region)
   (define-key coffee-mode-map (kbd "C-c E") 'coffee-exec-buffer)
+  (define-key coffee-mode-map (kbd "M-i") 'my-toggle-fold)
 
   )
 
@@ -950,6 +945,9 @@
                (setq indent-tabs-mode t)
                (setq c-basic-offset 4))))
 
+;;; nXML mode
+(setq nxml-slash-auto-complete-flag t)
+
 ;;; ------------------------------------------------------------------
 ;;; applications
 ;;; ------------------------------------------------------------------
@@ -1027,8 +1025,13 @@
   (add-to-list 'popwin:special-display-config '("*Messages*"))
   (add-to-list 'popwin:special-display-config '("*Backtrace*" :noselect t))
   (add-to-list 'popwin:special-display-config '("*Warnings*" :noselect t))
+  (add-to-list 'popwin:special-display-config
+               '(direx:direx-mode :position left :width 25 :dedicated t))
   )
 
+;;; direx.el
+(req direx "https://raw.github.com/m2ym/direx-el/master/direx.el"
+  (global-set-key (kbd "C-x C-j") 'direx:jump-to-directory-other-window))
 
 
 ;;; e2wm.el
@@ -1154,8 +1157,9 @@
 ;;   (global-set-key (kbd "C-SPC") 'set-normal-or-rectangel-mark-command))
 
 ;;; mic-paren.el
-(req mic-paren nil
+(req mic-paren "http://www.emacswiki.org/cgi-bin/emacs/download/mic-paren.el"
   (paren-activate)
+  (setq paren-match-face 'bold paren-sexp-mode t)
   (setq paren-sexp-mode t))
 
 ;;; linum
@@ -1175,10 +1179,9 @@
 (req hl-line+ "http://www.emacswiki.org/emacs/download/hl-line+.el"
   (hl-line-mode))
 
-;;; dmacro.el
-(lazyload (dmacro-exec) "dmacro" "http://pitecan.com/papers/JSSSTDmacro/dmacro.el")
-(defconst *dmacro-key* (kbd "C-t") "繰返し指定キー")
-(global-set-key *dmacro-key* 'dmacro-exec)
+;;; ndmacro.el
+(req ndmacro "https://raw.github.com/snj14/ndmacro.el/master/ndmacro.el"
+  (global-set-key (kbd "C-t") 'ndmacro))
 
 ;;; thing-opt.el
 (lazyload (upward-mark-thing) "thing-opt" "http://www.emacswiki.org/emacs/download/thing-opt.el"
@@ -1247,15 +1250,17 @@
   ))
 
 ;;; smartchr.el
-(req smartchr "http://github.com/imakado/emacs-smartchr/raw/master/smartchr.el"
-  (global-set-key (kbd "=")  (smartchr '("=" "==" "===" " = " " == " " === ")))
-  (global-set-key (kbd "'")  (smartchr '("'`!!''" "'")))
-  (global-set-key (kbd "\"") (smartchr '("\"`!!'\"" "\"")))
-  (global-set-key (kbd "{")  (smartchr '("{ `!!' }" "{")))
-  (global-set-key (kbd "(")  (smartchr '("(`!!')" "(")))
+;; (req smartchr "http://github.com/imakado/emacs-smartchr/raw/master/smartchr.el"
+;;   (global-set-key (kbd "=")  (smartchr '("=" "==" "===" " = " " == " " === ")))
+;;   (global-set-key (kbd "'")  (smartchr '("'`!!''" "'")))
+;;   (global-set-key (kbd "\"") (smartchr '("\"`!!'\"" "\"")))
+;;   (global-set-key (kbd "{")  (smartchr '("{ `!!' }" "{")))
+;;   (global-set-key (kbd "(")  (smartchr '("(" "(`!!')")))
 
-  (define-key emacs-lisp-mode-map (kbd ";") (smartchr '("; " ";; " ";;; ")))
-  (define-key lisp-interaction-mode-map (kbd ";") (smartchr '("; " ";; " ";;; "))))
+;;   (define-key emacs-lisp-mode-map (kbd ";") (smartchr '("; " ";; " ";;; ")))
+;;   (define-key lisp-interaction-mode-map (kbd ";") (smartchr '("; " ";; " ";;; "))))
+
+
 
 ;;; undo-tree
 ;;; orig http://www.dr-qubit.org/download.php?file=undo-tree/undo-tree.el
@@ -1516,17 +1521,3 @@
 ;;; test
 ;;; ------------------------------------------------------------------
 
-
-(defun my-time-lag ()
-  (let* ((now (current-time))
-         (min (- (car now) (car my-time-zero)))
-         (sec (- (car (cdr now)) (car (cdr my-time-zero))))
-         (msec (/ (- (car (cdr (cdr now)))
-                     (car (cdr (cdr my-time-zero))))
-                     1000))
-         (lag (+ (* 60000 min) (* 1000 sec) msec)))
-    (message "'.emacs.el' loading time: %d msec." lag)))
-
-
-(add-hook 'after-init-hook (lambda () (my-time-lag)) t)
-(add-hook 'after-init-hook (lambda () (my-time-lag-print)) t)
