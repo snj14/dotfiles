@@ -1092,10 +1092,23 @@
 ;;; C-x #
 (req sudo-ext "http://www.emacswiki.org/emacs/download/sudo-ext.el")
 
-;;; zencoding-mode.el --- Unfold CSS-selector-like expressions to markup
-(req zencoding-mode "http://github.com/chrisdone/zencoding/raw/master/zencoding-mode.el"
-  (add-hook 'sgml-mode-hook 'zencoding-mode) ;; Auto-start on any markup modes
-  (add-hook 'html-mode-hook 'zencoding-mode))
+;; expand-region.el
+(when (file-exists-p "~/.emacs.d/expand-region.el")
+  (add-to-list 'load-path "~/.emacs.d/expand-region.el")
+  (require 'expand-region)
+  (setq er/try-expand-list
+        '(er/mark-symbol
+          er/mark-symbol-with-prefix
+          er/mark-next-accessor
+          er/mark-method-call
+          er/mark-comment
+          er/mark-comment-block
+          er/mark-inside-quotes
+          er/mark-outside-quotes
+          er/mark-inside-pairs
+          er/mark-outside-pairs))
+  (global-set-key (kbd "M-s") 'er/expand-region)
+  (global-set-key (kbd "M-S") 'er/contract-region))
 
 ;;; yasnippet.el
 (when (require 'yasnippet nil t)
@@ -1182,22 +1195,6 @@
 ;;; ndmacro.el
 (req ndmacro "https://raw.github.com/snj14/ndmacro.el/master/ndmacro.el"
   (global-set-key (kbd "C-t") 'ndmacro))
-
-;;; thing-opt.el
-(lazyload (upward-mark-thing) "thing-opt" "http://www.emacswiki.org/emacs/download/thing-opt.el"
-  (setq upward-mark-thing-list
-        '(;; special thing
-          email
-          url
-          string
-          ;; general thing
-          symbol
-          word
-          ;; up-list
-          (up-list . *)
-          )))
-(global-set-key (kbd "M-s") 'upward-mark-thing)
-
 
 ;;; active-region.el
 (req active-region "http://github.com/snj14/active-region/raw/master/active-region.el"
