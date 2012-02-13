@@ -79,6 +79,7 @@ WORDCHARS='*?_-.[]~&;!#$%^(){}<>'                     # C-w (stop / =)
 
 #autoload -U compinit; compinit -u                     # complation (-u for cygwin)
 autoload -U compinit; compinit                        # complation
+autoload -U colors; colors                            # $fg[blue]
 
 # ------------------------------------------------------------------------------
 # key bindings
@@ -105,33 +106,17 @@ bindkey '\e^h' run-help            # M-C-h : help
 bindkey '\eh' backward-kill-word   # M-h   : kill
 
 # ------------------------------------------------------------------------------
-# color definitions
-# ------------------------------------------------------------------------------
-local BLACK=$'%{\e[1;30m%}'
-local RED=$'%{\e[1;31m%}'
-local GREEN=$'%{\e[1;32m%}'
-local YELLOW=$'%{\e[1;33m%}'
-local BLUE=$'%{\e[1;34m%}'
-local PURPLE=$'%{\e[1;35m%}'
-local WATER=$'%{\e[1;36m%}'
-local WHITE=$'%{\e[1;37m%}'
-local DEFAULT=$'%{\e[1;m%}'
-
-# ------------------------------------------------------------------------------
 # prompt
 # ------------------------------------------------------------------------------
-#
-# %n ... $USER
 # %m ... $HOSTNAME (from begin to first period)
+# %n ... $USER
+# %L ... $SHLVL
+# %(condition.true.false)
 
 setopt prompt_subst # extend format
-PROMPT_ORIG=$PURPLE'[%n@%m] %(!.#.$) '$DEFAULT
-PROMPT_ERROR=$RED'[%n@%m] %(!.#.$) '$DEFAULT
-RPROMPT=$LIGHT_GRAY'[%~]'$DEFAULT
+PROMPT="%(?.%B.%S)%{$fg[yellow]%}[%D{%Y-%m-%d %H:%M:%S}]%{$fg[white]%}:%{$fg[green]%}Lv.%L%{$fg[white]%}:%{$fg[blue]%}%m%{$fg[white]%}:%{$fg[blue]%}%~%{$fg[white]%}%(?.%b.%s)
+%{$fg[green]%}%n%{$reset_color%}%(!.#.$) "
 
-precmd () {
-  PROMPT=%(?.$PROMPT_ORIG.$PROMPT_ERROR)%
-}
 
 # ------------------------------------------------------------------------------
 # history
@@ -250,16 +235,6 @@ ls -v -F --color=auto
 }
 chpwd_functions+=_toriaezu_ls
 
-
-function _change_rprompt {
-if [ $PWD = $HOME ]; then
-  RPROMPT="[%T]"
-else
-  RPROMPT="%{$fg_bold[white]%}[%{$reset_color%}%{$fg[cyan]%}%60<..<%~%{$reset_color%}%{$fg_bold[white]%}]%{$reset_color%}"
-fi
-}
-chpwd_functions+=_change_rprompt
-
 # ------------------------------------------------------------------------------
 # for nave
 # ------------------------------------------------------------------------------
@@ -270,6 +245,21 @@ fi
 }
 
 chpwd_functions+=_naverc_check
+
+# ------------------------------------------------------------------------------
+# vcs
+# ------------------------------------------------------------------------------
+autoload -Uz vcs_info
+zstyle ':vcs_info:*' formats '(%s)-[%b]'
+zstyle ':vcs_info:*' actionformats '(%s)-[%b|%a]'
+_vcs_info_msg_on_rprompt () {
+    psvar=()
+    LANG=en_US.UTF-8 vcs_info
+    [[ -n "$vcs_info_msg_0_" ]] && psvar[1]="$vcs_info_msg_0_"
+}
+precmd_functions+=_vcs_info_msg_on_rprompt
+
+RPROMPT="%1(v|%F{green}%1v%f|)"
 
 # ------------------------------------------------------------------------------
 # change upper directory
@@ -395,7 +385,7 @@ fi
 # ------------------------------------------------------------------------------
 local COMMAND=""
 local COMMAND_TIME=""
-precmd() {
+_notify_after_long_command_precmd() {
     if [ "$COMMAND_TIME" -ne "0" ] ; then
         local d=`date +%s`
         d=`expr $d - $COMMAND_TIME`
@@ -407,10 +397,12 @@ precmd() {
     COMMAND="0"
     COMMAND_TIME="0"
 }
-preexec () {
+_notify_after_long_command_preexec () {
     COMMAND="${1}"
     COMMAND_TIME=`date +%s`
 }
+precmd_functions+=_notify_after_long_command_precmd
+preexec_functions+=_notify_after_long_command_preexec
 
 
 # ------------------------------------------------------------------------------
