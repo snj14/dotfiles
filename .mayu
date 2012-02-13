@@ -44,9 +44,5 @@ key M0-T = S-M-F3
 ###############
 # select window
 ###############
-# CompizConfig > Scale > Launch WindowPicker > S-C-F12
-# key M0-A = Windows W
-
-# CompizConfig > Enhanced Zoom Desktop > ZoomIn  > Super-F4
-# CompizConfig > Enhanced Zoom Desktop > ZoomOut > Super-F5
-
+# gconftool-2 --set --type string /apps/compiz-1/plugins/scale/screen0/options/initiate_all_key "<Shift><Control>F4"
+key M0-A = S-M-F4
