@@ -210,6 +210,13 @@ alias e='emacsclient --no-wait'
 # alias ssh1='ssh -t user@host "auto exec command"'
 
 # ------------------------------------------------------------------------------
+# /usr/lib/command-not-found
+# ------------------------------------------------------------------------------
+if [[ -f '/etc/zsh_command_not_found' ]] ; then
+  source /etc/zsh_command_not_found
+fi
+
+# ------------------------------------------------------------------------------
 # rvm
 # ------------------------------------------------------------------------------
 if [[ -s $HOME/.rvm/scripts/rvm ]] ; then source $HOME/.rvm/scripts/rvm ; fi
