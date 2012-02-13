@@ -370,7 +370,11 @@ function cde () {
 # ------------------------------------------------------------------------------
 # GNU SCREEN
 # ------------------------------------------------------------------------------
-if [ `which screen` ]; then
+if [ `which tmux` ]; then
+    if [ $SHLVL = 1 ]; then # 自動実行
+        tmux
+    fi
+elif [ `which screen` ]; then
     if [ -f $HOME/.zsh_screen ]; then
         source $HOME/.zsh_screen
     fi
