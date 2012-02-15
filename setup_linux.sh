@@ -1,6 +1,12 @@
 
 
 ###############
+# mayu
+###############
+sudo cp ~/dotfiles/.mayu.d/mayu /etc/init.d/mayu
+sudo update-rc.d mayu start 10 2 . stop 10 0 1 3 4 5 6 .
+
+###############
 # compiz scale
 ###############
 gconftool-2 --set --type string /apps/compiz-1/plugins/scale/screen0/options/initiate_all_key "<Shift><Alt>F4"
