@@ -155,11 +155,11 @@
       (cond
        ;; for X (debian/ubuntu/fedora)
        ((eq window-system 'x)
-	;;(setq my-font-height 90)
+	(setq my-font-height 90)
 	;; (setq my-font-height 105)
 	;; (setq my-font-height 120)
 	;; (setq my-font-height 150)
-	(setq my-font-height 180)
+        ;; (setq my-font-height 120)
 	;;(setq my-font "Monospace")
 	;;(setq my-font "Inconsolata")
         (setq my-font "ricty")
@@ -1050,7 +1050,7 @@
 ;; (auto-install-from-url "http://github.com/kiwanami/emacs-window-manager/raw/master/e2wm.el")
 (lazyload (e2wm:start-management) "e2wm" "e2wm"
   (setq e2wm:c-code-recipe
-        '(| (:left-size-ratio 0.2)
+        '(| (:left-size-ratio 0.25)
             (- (:upper-size-ratio 0.7)
                files history)
             (- (:upper-size-ratio 0.7)
